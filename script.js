@@ -1,13 +1,37 @@
 // ======================================================
 // FINSIGHT - JAVASCRIPT
-// PART 1 OF 2
+// PART 1 OF 3
 // ======================================================
 
+// DATA
+let expenses = JSON.parse(localStorage.getItem("finsightExpenses")) || [];
+let budget = Number(localStorage.getItem("finsightBudget")) || 0;
 
-// ======================================================
-// GET TODAY'S DATE
-// ======================================================
+let categoryBudgets =
+    JSON.parse(localStorage.getItem("finsightCategoryBudgets")) || {};
 
+let savingsChallenges =
+    Number(localStorage.getItem("finsightChallenges")) || 0;
+
+
+// SAVE DATA
+function saveData() {
+    localStorage.setItem("finsightExpenses", JSON.stringify(expenses));
+    localStorage.setItem("finsightBudget", budget);
+
+    localStorage.setItem(
+        "finsightCategoryBudgets",
+        JSON.stringify(categoryBudgets)
+    );
+
+    localStorage.setItem(
+        "finsightChallenges",
+        savingsChallenges
+    );
+}
+
+
+// TODAY'S DATE
 function getTodayDate() {
     const today = new Date();
 
@@ -21,639 +45,390 @@ function getTodayDate() {
         today.getDate()
     ).padStart(2, "0");
 
-    return year + "-" + month + "-" + day;
+    return `${year}-${month}-${day}`;
 }
 
 
-// ======================================================
-// DATA
-// ======================================================
+// GREETING
+function updateGreeting() {
+    const greeting =
+        document.getElementById("greeting");
 
-let expenses =
-    JSON.parse(
-        localStorage.getItem("expenses")
-    ) || [];
+    if (!greeting) return;
 
-let total = 0;
+    const hour = new Date().getHours();
 
-let expenseChart = null;
-
-let analyticsViewed =
-    localStorage.getItem("analyticsViewed") === "true";
-
-let simulatorUsed =
-    localStorage.getItem("simulatorUsed") === "true";
-
-let challengeCompleted =
-    localStorage.getItem("challengeCompleted") === "true";
-
-
-// ======================================================
-// SET DEFAULT DATE
-// ======================================================
-
-const expenseDate =
-    document.getElementById("expenseDate");
-
-if (expenseDate) {
-    expenseDate.value = getTodayDate();
+    if (hour < 12) {
+        greeting.textContent =
+            "Good Morning! 👋";
+    }
+    else if (hour < 18) {
+        greeting.textContent =
+            "Good Afternoon! ☀️";
+    }
+    else {
+        greeting.textContent =
+            "Good Evening! 🌙";
+    }
 }
 
 
-// ======================================================
-// NAVIGATION
-// ======================================================
-
+// SHOW SECTION
 function showSection(sectionId) {
 
     const sections =
         document.querySelectorAll(".app-section");
 
-    sections.forEach(function(section) {
-
+    sections.forEach(section => {
         section.classList.remove(
             "active-section"
         );
-
     });
 
-
-    const selectedSection =
+    const selected =
         document.getElementById(sectionId);
 
-    if (selectedSection) {
-
-        selectedSection.classList.add(
+    if (selected) {
+        selected.classList.add(
             "active-section"
         );
-
     }
-
-
-    // Bottom navigation
 
     const navButtons =
         document.querySelectorAll(".nav-btn");
 
-    navButtons.forEach(function(button) {
-
+    navButtons.forEach(button => {
         button.classList.remove("active");
-
     });
 
+    navButtons.forEach(button => {
 
-    navButtons.forEach(function(button) {
+        const text =
+            button.getAttribute("onclick");
 
         if (
-            button.getAttribute("onclick") ===
-            "showSection('" + sectionId + "')"
+            text &&
+            text.includes(`'${sectionId}'`)
         ) {
-
             button.classList.add("active");
-
         }
 
     });
 
-
-    // Special sections
-
-    if (sectionId === "analytics") {
-
-        analyticsViewed = true;
-
-        localStorage.setItem(
-            "analyticsViewed",
-            "true"
-        );
-
-        updateChart();
-
-        displayAnalyticsSummary();
-
-        updateJourney();
-
-    }
-
-
-    if (sectionId === "mood") {
-
-        displayMoneyMood();
-
-    }
-
-
-    if (sectionId === "simulator") {
-
-        updateSimulator();
-
-    }
-
-
-    if (sectionId === "journey") {
-
-        updateJourney();
-
-    }
-
+    updateAll();
 }
 
 
-// ======================================================
-// TOAST MESSAGE
-// ======================================================
-
-function showToast(message, icon) {
-
-    const toast =
-        document.getElementById("toast");
-
-    const toastMessage =
-        document.getElementById("toastMessage");
-
-    const toastIcon =
-        document.getElementById("toastIcon");
-
-
-    if (!toast) {
-        return;
-    }
-
-
-    toastMessage.textContent =
-        message;
-
-    toastIcon.textContent =
-        icon || "✅";
-
-
-    toast.classList.add("show");
-
-
-    setTimeout(function() {
-
-        toast.classList.remove("show");
-
-    }, 2000);
-
-}
-
-
-// ======================================================
 // ADD EXPENSE
-// ======================================================
-
 function addExpense() {
 
     const name =
         document
-        .getElementById("expenseName")
-        .value
-        .trim();
-
-
-    const amount =
-        document
-        .getElementById("expenseAmount")
-        .value;
-
-
-    const category =
-        document
-        .getElementById("expenseCategory")
-        .value;
-
+            .getElementById("expenseName")
+            .value
+            .trim();
 
     const date =
         document
-        .getElementById("expenseDate")
-        .value;
+            .getElementById("expenseDate")
+            .value;
+
+    const amount =
+        Number(
+            document
+                .getElementById("expenseAmount")
+                .value
+        );
+
+    const category =
+        document
+            .getElementById("expenseCategory")
+            .value;
 
 
-    // Validation
+    if (!name) {
+        showToast(
+            "⚠️",
+            "Please enter an expense name."
+        );
+        return;
+    }
+
+
+    if (!amount || amount <= 0) {
+        showToast(
+            "⚠️",
+            "Please enter a valid amount."
+        );
+        return;
+    }
+
 
     if (
-        name === "" ||
-        amount === "" ||
-        date === "" ||
+        !category ||
         category === "Select Category"
     ) {
-
         showToast(
-            "Please fill all the fields!",
-            "⚠️"
+            "⚠️",
+            "Please select a category."
         );
-
         return;
-
     }
 
 
-    if (Number(amount) <= 0) {
+    const expense = {
 
-        showToast(
-            "Amount must be greater than 0!",
-            "⚠️"
-        );
-
-        return;
-
-    }
-
-
-    // Add expense
-
-    expenses.push({
+        id: Date.now(),
 
         name: name,
 
-        amount: Number(amount),
+        date:
+            date || getTodayDate(),
 
-        category: category,
+        amount: amount,
 
-        date: date
+        category: category
 
-    });
+    };
 
 
-    // Save expense
+    expenses.push(expense);
 
-    localStorage.setItem(
-        "expenses",
-        JSON.stringify(expenses)
+    saveData();
+
+    clearExpenseForm();
+
+    updateAll();
+
+    showToast(
+        "✅",
+        "Expense added successfully!"
     );
+}
 
 
-    // Refresh app
-
-    displayExpenses();
-
-
-    // Clear fields
+// CLEAR EXPENSE FORM
+function clearExpenseForm() {
 
     document
         .getElementById("expenseName")
         .value = "";
-
-
-    document
-        .getElementById("expenseAmount")
-        .value = "";
-
-
-    document
-        .getElementById("expenseCategory")
-        .selectedIndex = 0;
-
-
-    // Keep today's date
 
     document
         .getElementById("expenseDate")
         .value = getTodayDate();
 
+    document
+        .getElementById("expenseAmount")
+        .value = "";
 
-    showToast(
-        "Expense added successfully!",
-        "💸"
-    );
-
+    document
+        .getElementById("expenseCategory")
+        .value = "Select Category";
 }
 
 
-// ======================================================
-// DISPLAY EXPENSES
-// ======================================================
+// DELETE EXPENSE
+function deleteExpense(id) {
 
-function displayExpenses() {
+    expenses =
+        expenses.filter(
+            expense =>
+                expense.id !== id
+        );
 
-    const expenseList =
+    saveData();
+
+    updateAll();
+
+    showToast(
+        "🗑️",
+        "Expense deleted."
+    );
+}
+
+
+// TOTAL
+function getTotalSpent() {
+
+    return expenses.reduce(
+        (total, expense) =>
+            total + Number(expense.amount),
+        0
+    );
+}
+
+
+// EXPENSE LIST
+function updateExpenseList() {
+
+    const list =
         document.getElementById(
             "expenseList"
         );
 
+    if (!list) return;
 
-    if (!expenseList) {
+
+    if (expenses.length === 0) {
+
+        list.innerHTML =
+            "<p>No expenses added yet. 💸</p>";
+
         return;
     }
 
 
-    expenseList.innerHTML = "";
-
-    total = 0;
-
-
-    expenses.forEach(
-        function(expense, index) {
-
-            const expenseDiv =
-                document.createElement("div");
+    const sortedExpenses =
+        [...expenses].reverse();
 
 
-            const formattedDate =
-                expense.date
-                    ? expense.date
-                        .split("-")
-                        .reverse()
-                        .join("-")
-                    : "";
+    list.innerHTML =
+        sortedExpenses.map(
+            expense => `
 
+        <div class="expense-item">
 
-            expenseDiv.innerHTML =
+            <div>
 
-                "<div>" +
+                <strong>
+                    ${escapeHTML(expense.name)}
+                </strong>
 
-                escapeHTML(expense.name) +
+                <small>
+                    ${escapeHTML(expense.category)}
+                    •
+                    ${expense.date}
+                </small>
 
-                " - ₹" +
+            </div>
 
-                Number(expense.amount) +
+            <div>
 
-                " - " +
+                <strong>
+                    ₹${Number(
+                        expense.amount
+                    ).toLocaleString("en-IN")}
+                </strong>
 
-                escapeHTML(expense.category) +
+                <button
+                    type="button"
+                    onclick="deleteExpense(${expense.id})"
+                >
+                    🗑️
+                </button>
 
-                "</div>" +
+            </div>
 
-                "<div>📅 " +
+        </div>
 
-                formattedDate +
-
-                "</div>" +
-
-                "<button type=\"button\" onclick=\"deleteExpense(" +
-
-                index +
-
-                ")\">Delete</button>";
-
-
-            expenseList.appendChild(
-                expenseDiv
-            );
-
-
-            total =
-                total +
-                Number(expense.amount);
-
-        }
-    );
-
-
-    const totalAmount =
-        document.getElementById(
-            "totalAmount"
-        );
-
-
-    if (totalAmount) {
-
-        totalAmount.textContent =
-            total;
-
-    }
-
-
-    displayCategorySummary();
-
-    updateDashboard();
-
-    updateHomeSnapshot();
-
-    displayAnalyticsSummary();
-
-    updateChart();
-
-    displayMoneyMood();
-
-    updateJourney();
-
+    `
+        ).join("");
 }
 
 
-// ======================================================
-// DELETE EXPENSE
-// ======================================================
-
-function deleteExpense(index) {
-
-    expenses.splice(index, 1);
-
-
-    localStorage.setItem(
-        "expenses",
-        JSON.stringify(expenses)
-    );
-
-
-    displayExpenses();
-
-
-    showToast(
-        "Expense deleted!",
-        "🗑️"
-    );
-
-}
-
-
-// ======================================================
 // CATEGORY TOTALS
-// ======================================================
-
 function getCategoryTotals() {
 
-    const categoryTotals = {
+    const totals = {};
 
-        Food: 0,
+    expenses.forEach(expense => {
 
-        Travel: 0,
+        const category =
+            expense.category;
 
-        Shopping: 0,
+        totals[category] =
+            (totals[category] || 0) +
+            Number(expense.amount);
 
-        Education: 0,
+    });
 
-        Other: 0
-
-    };
-
-
-    expenses.forEach(
-        function(expense) {
-
-            if (
-                categoryTotals[
-                    expense.category
-                ] !== undefined
-            ) {
-
-                categoryTotals[
-                    expense.category
-                ] += Number(
-                    expense.amount
-                );
-
-            }
-
-        }
-    );
-
-
-    return categoryTotals;
-
+    return totals;
 }
 
 
-// ======================================================
 // CATEGORY SUMMARY
-// ======================================================
+function updateCategorySummary() {
 
-function displayCategorySummary() {
-
-    const categorySummary =
+    const container =
         document.getElementById(
             "categorySummary"
         );
 
-
-    if (!categorySummary) {
-        return;
-    }
+    if (!container) return;
 
 
     const totals =
         getCategoryTotals();
 
+    const categories =
+        Object.keys(totals);
 
-    categorySummary.innerHTML =
 
-        "<div class=\"category-card\">" +
+    if (categories.length === 0) {
 
-        "<h2>📂 Category-wise Spending</h2>" +
+        container.innerHTML = "";
 
-        "<p>🍔 Food: ₹" +
-        totals.Food +
-        "</p>" +
+        return;
+    }
 
-        "<p>🚗 Travel: ₹" +
-        totals.Travel +
-        "</p>" +
 
-        "<p>🛍️ Shopping: ₹" +
-        totals.Shopping +
-        "</p>" +
+    container.innerHTML = `
 
-        "<p>📚 Education: ₹" +
-        totals.Education +
-        "</p>" +
+        <div class="category-summary-card">
 
-        "<p>📦 Other: ₹" +
-        totals.Other +
-        "</p>" +
+            <h2>📂 Category Summary</h2>
 
-        "</div>";
+            ${categories.map(
+                category => `
 
+                <div class="summary-row">
+
+                    <span>
+                        ${escapeHTML(category)}
+                    </span>
+
+                    <strong>
+                        ₹${totals[
+                            category
+                        ].toLocaleString("en-IN")}
+                    </strong>
+
+                </div>
+
+            `
+            ).join("")}
+
+        </div>
+
+    `;
 }
 
 
-// ======================================================
-// DASHBOARD
-// ======================================================
-
-function updateDashboard() {
-
-    const expenseCount =
-        expenses.length;
-
-
-    let average = 0;
-
-
-    if (expenseCount > 0) {
-
-        average =
-            total /
-            expenseCount;
-
-    }
-
-
-    const dashboardTotal =
-        document.getElementById(
-            "dashboardTotal"
-        );
-
-
-    const count =
-        document.getElementById(
-            "expenseCount"
-        );
-
-
-    const averageExpense =
-        document.getElementById(
-            "averageExpense"
-        );
-
-
-    if (dashboardTotal) {
-
-        dashboardTotal.textContent =
-            total;
-
-    }
-
-
-    if (count) {
-
-        count.textContent =
-            expenseCount;
-
-    }
-
-
-    if (averageExpense) {
-
-        averageExpense.textContent =
-            average.toFixed(2);
-
-    }
-
-}
-
-
-// ======================================================
 // HOME SNAPSHOT
-// ======================================================
+function updateHome() {
 
-function updateHomeSnapshot() {
+    const total =
+        getTotalSpent();
+
 
     const homeTotal =
         document.getElementById(
             "homeTotal"
         );
 
+    if (homeTotal) {
+
+        homeTotal.textContent =
+            total.toLocaleString("en-IN");
+
+    }
+
 
     const homeCount =
         document.getElementById(
             "homeCount"
         );
-
-
-    const homeTopCategory =
-        document.getElementById(
-            "homeTopCategory"
-        );
-
-
-    if (homeTotal) {
-
-        homeTotal.textContent =
-            total;
-
-    }
-
 
     if (homeCount) {
 
@@ -663,135 +438,382 @@ function updateHomeSnapshot() {
     }
 
 
-    if (
-        homeTopCategory &&
-        expenses.length === 0
-    ) {
+    const categoryTotals =
+        getCategoryTotals();
 
-        homeTopCategory.textContent =
-            "None";
+    let topCategory = "None";
 
-        return;
+    const categories =
+        Object.keys(categoryTotals);
+
+
+    if (categories.length > 0) {
+
+        topCategory =
+            categories.reduce(
+                (top, category) =>
+
+                    categoryTotals[category] >
+                    categoryTotals[top]
+
+                        ? category
+                        : top,
+
+                categories[0]
+            );
 
     }
 
 
-    const totals =
-        getCategoryTotals();
+    const topElement =
+        document.getElementById(
+            "homeTopCategory"
+        );
 
+    if (topElement) {
 
-    let topCategory =
-        "None";
-
-    let highest =
-        0;
-
-
-    Object.keys(totals).forEach(
-        function(category) {
-
-            if (
-                totals[category] >
-                highest
-            ) {
-
-                highest =
-                    totals[category];
-
-                topCategory =
-                    category;
-
-            }
-
-        }
-    );
-
-
-    if (homeTopCategory) {
-
-        homeTopCategory.textContent =
+        topElement.textContent =
             topCategory;
 
     }
-
 }
 
+
+// DASHBOARD
+function updateDashboard() {
+
+    const total =
+        getTotalSpent();
+
+
+    const dashboardTotal =
+        document.getElementById(
+            "dashboardTotal"
+        );
+
+    if (dashboardTotal) {
+
+        dashboardTotal.textContent =
+            total.toLocaleString("en-IN");
+
+    }
+
+
+    const count =
+        document.getElementById(
+            "expenseCount"
+        );
+
+    if (count) {
+
+        count.textContent =
+            expenses.length;
+
+    }
+
+
+    const average =
+        expenses.length
+            ? total / expenses.length
+            : 0;
+
+
+    const averageElement =
+        document.getElementById(
+            "averageExpense"
+        );
+
+    if (averageElement) {
+
+        averageElement.textContent =
+            Math.round(
+                average
+            ).toLocaleString("en-IN");
+
+    }
+
+
+    const remaining =
+        Math.max(
+            budget - total,
+            0
+        );
+
+
+    const dashboardRemaining =
+        document.getElementById(
+            "dashboardBudgetRemaining"
+        );
+
+    if (dashboardRemaining) {
+
+        dashboardRemaining.textContent =
+            remaining.toLocaleString("en-IN");
+
+    }
+}
 // ======================================================
 // FINSIGHT - JAVASCRIPT
-// PART 2 OF 2
+// PART 2 OF 3
 // ======================================================
 
 
-// ======================================================
-// ANALYTICS CATEGORY SUMMARY
-// ======================================================
+// BUDGET
+function setBudget() {
 
-function displayAnalyticsSummary() {
-
-    const summary =
+    const input =
         document.getElementById(
-            "analyticsCategorySummary"
+            "budgetAmount"
         );
 
-    if (!summary) {
+    const amount =
+        Number(input.value);
+
+
+    if (!amount || amount <= 0) {
+
+        showToast(
+            "⚠️",
+            "Please enter a valid budget."
+        );
+
         return;
     }
 
-    const totals =
-        getCategoryTotals();
 
-    summary.innerHTML =
+    budget = amount;
 
-        "<div class=\"category-card\">" +
+    saveData();
 
-        "<h2>📊 Category Breakdown</h2>" +
+    input.value = "";
 
-        "<p>🍔 Food: ₹" +
-        totals.Food +
-        "</p>" +
+    updateBudget();
 
-        "<p>🚗 Travel: ₹" +
-        totals.Travel +
-        "</p>" +
 
-        "<p>🛍️ Shopping: ₹" +
-        totals.Shopping +
-        "</p>" +
-
-        "<p>📚 Education: ₹" +
-        totals.Education +
-        "</p>" +
-
-        "<p>📦 Other: ₹" +
-        totals.Other +
-        "</p>" +
-
-        "</div>";
+    showToast(
+        "🎯",
+        "Monthly budget set successfully!"
+    );
 }
 
 
-// ======================================================
-// PIE CHART
-// ======================================================
+// UPDATE BUDGET
+function updateBudget() {
 
-function updateChart() {
+    const total =
+        getTotalSpent();
 
-    const canvas =
-        document.getElementById(
-            "expenseChart"
+    const remaining =
+        budget - total;
+
+    const safeRemaining =
+        Math.max(
+            remaining,
+            0
         );
 
-    if (!canvas) {
+
+    const budgetTotal =
+        document.getElementById(
+            "budgetTotal"
+        );
+
+    if (budgetTotal) {
+
+        budgetTotal.textContent =
+            budget.toLocaleString("en-IN");
+
+    }
+
+
+    const budgetSpent =
+        document.getElementById(
+            "budgetSpent"
+        );
+
+    if (budgetSpent) {
+
+        budgetSpent.textContent =
+            total.toLocaleString("en-IN");
+
+    }
+
+
+    const budgetRemaining =
+        document.getElementById(
+            "budgetRemaining"
+        );
+
+    if (budgetRemaining) {
+
+        budgetRemaining.textContent =
+            safeRemaining.toLocaleString("en-IN");
+
+    }
+
+
+    const progress =
+        document.getElementById(
+            "budgetProgress"
+        );
+
+
+    let percentage = 0;
+
+
+    if (budget > 0) {
+
+        percentage =
+            (total / budget) * 100;
+
+    }
+
+
+    if (progress) {
+
+        progress.style.width =
+            Math.min(
+                percentage,
+                100
+            ) + "%";
+
+    }
+
+
+    const message =
+        document.getElementById(
+            "budgetMessage"
+        );
+
+
+    if (!message) return;
+
+
+    if (budget === 0) {
+
+        message.textContent =
+            "Set your budget to start tracking.";
+
         return;
     }
 
 
-    // If Chart.js has not loaded
+    if (total > budget) {
 
-    if (
-        typeof Chart ===
-        "undefined"
-    ) {
+        message.textContent =
+            "🚨 You have exceeded your budget!";
+
+    }
+
+    else if (percentage >= 80) {
+
+        message.textContent =
+            "⚠️ You're close to your budget limit.";
+
+    }
+
+    else if (percentage >= 50) {
+
+        message.textContent =
+            "💡 More than half of your budget is used.";
+
+    }
+
+    else {
+
+        message.textContent =
+            "🎉 You're doing well! Keep tracking your spending.";
+
+    }
+}
+
+
+// CATEGORY BUDGET
+function setCategoryBudget() {
+
+    const nameInput =
+        document.getElementById(
+            "categoryBudgetName"
+        );
+
+    const amountInput =
+        document.getElementById(
+            "categoryBudgetAmount"
+        );
+
+
+    const category =
+        nameInput.value.trim();
+
+    const amount =
+        Number(amountInput.value);
+
+
+    if (!category) {
+
+        showToast(
+            "⚠️",
+            "Please enter a category."
+        );
+
+        return;
+    }
+
+
+    if (!amount || amount <= 0) {
+
+        showToast(
+            "⚠️",
+            "Please enter a valid category limit."
+        );
+
+        return;
+    }
+
+
+    categoryBudgets[category] =
+        amount;
+
+
+    saveData();
+
+
+    nameInput.value = "";
+
+    amountInput.value = "";
+
+
+    updateCategoryBudgets();
+
+
+    showToast(
+        "🎯",
+        `${category} budget added.`
+    );
+}
+
+
+// CATEGORY BUDGET DISPLAY
+function updateCategoryBudgets() {
+
+    const container =
+        document.getElementById(
+            "categoryBudgetList"
+        );
+
+    if (!container) return;
+
+
+    const categories =
+        Object.keys(
+            categoryBudgets
+        );
+
+
+    if (categories.length === 0) {
+
+        container.innerHTML =
+            "<p>No category budgets set yet.</p>";
 
         return;
     }
@@ -801,37 +823,152 @@ function updateChart() {
         getCategoryTotals();
 
 
-    const labels = [
-        "Food",
-        "Travel",
-        "Shopping",
-        "Education",
-        "Other"
-    ];
+    container.innerHTML =
+        categories.map(
+            category => {
+
+                const limit =
+                    Number(
+                        categoryBudgets[
+                            category
+                        ]
+                    );
 
 
-    const values = [
-
-        totals.Food,
-
-        totals.Travel,
-
-        totals.Shopping,
-
-        totals.Education,
-
-        totals.Other
-
-    ];
+                const spent =
+                    Number(
+                        totals[
+                            category
+                        ] || 0
+                    );
 
 
-    const hasExpenses =
-        values.some(
-            function(value) {
-                return value > 0;
+                const remaining =
+                    limit - spent;
+
+
+                const percentage =
+                    limit > 0
+
+                        ? Math.min(
+                            (spent / limit) * 100,
+                            100
+                        )
+
+                        : 0;
+
+
+                let status =
+                    "✅ Within limit";
+
+
+                if (spent > limit) {
+
+                    status =
+                        "🚨 Budget exceeded";
+
+                }
+
+                else if (
+                    percentage >= 80
+                ) {
+
+                    status =
+                        "⚠️ Close to limit";
+
+                }
+
+
+                return `
+
+                    <div class="category-budget-item">
+
+                        <h3>
+                            ${escapeHTML(category)}
+                        </h3>
+
+                        <p>
+                            Spent:
+                            ₹${spent.toLocaleString("en-IN")}
+                        </p>
+
+                        <p>
+                            Limit:
+                            ₹${limit.toLocaleString("en-IN")}
+                        </p>
+
+                        <p>
+
+                            ${
+                                remaining >= 0
+
+                                    ? `Remaining: ₹${remaining.toLocaleString("en-IN")}`
+
+                                    : `Over by: ₹${Math.abs(
+                                        remaining
+                                    ).toLocaleString("en-IN")}`
+
+                            }
+
+                        </p>
+
+
+                        <div class="budget-progress">
+
+                            <div
+                                class="budget-progress-fill"
+                                style="width:${percentage}%"
+                            ></div>
+
+                        </div>
+
+
+                        <strong>
+                            ${status}
+                        </strong>
+
+
+                        <button
+                            type="button"
+                            onclick="deleteCategoryBudget('${escapeAttribute(category)}')"
+                        >
+                            🗑️ Remove
+                        </button>
+
+                    </div>
+
+                `;
+
             }
-        );
+        ).join("");
+}
 
+
+// DELETE CATEGORY BUDGET
+function deleteCategoryBudget(
+    category
+) {
+
+    delete categoryBudgets[
+        category
+    ];
+
+    saveData();
+
+    updateCategoryBudgets();
+
+    showToast(
+        "🗑️",
+        "Category budget removed."
+    );
+}
+
+
+// ANALYTICS
+let expenseChart = null;
+
+
+function updateAnalytics() {
 
     const message =
         document.getElementById(
@@ -839,149 +976,136 @@ function updateChart() {
         );
 
 
-    if (message) {
+    const totals =
+        getCategoryTotals();
 
-        if (hasExpenses) {
+    const categories =
+        Object.keys(totals);
 
-            message.textContent =
-                "Here is where your money is going! 💸";
 
-        } else {
+    if (categories.length === 0) {
+
+        if (message) {
 
             message.textContent =
                 "Add some expenses to see your spending pattern.";
 
         }
 
-    }
 
+        if (expenseChart) {
 
-    // Destroy old chart
+            expenseChart.destroy();
 
-    if (expenseChart) {
+            expenseChart = null;
 
-        expenseChart.destroy();
+        }
 
-        expenseChart = null;
-
-    }
-
-
-    // Don't create empty chart
-
-    if (!hasExpenses) {
         return;
     }
 
 
-    const ctx =
-        canvas.getContext("2d");
+    if (message) {
+
+        message.textContent =
+            "Here's how your spending is divided.";
+
+    }
 
 
-    const chartPlugins = [];
+    const canvas =
+        document.getElementById(
+            "expenseChart"
+        );
 
 
-    // Add number labels if plugin exists
+    if (!canvas) return;
+
 
     if (
-        typeof ChartDataLabels !==
+        typeof Chart ===
         "undefined"
     ) {
+        return;
+    }
 
-        chartPlugins.push(
-            ChartDataLabels
-        );
+
+    if (expenseChart) {
+
+        expenseChart.destroy();
 
     }
 
 
     expenseChart =
         new Chart(
-            ctx,
+            canvas.getContext("2d"),
             {
 
-                type: "pie",
+                type: "doughnut",
 
                 data: {
 
-                    labels: labels,
+                    labels:
+                        categories,
 
                     datasets: [
-
                         {
-
-                            data: values,
-
-                            backgroundColor: [
-
-                                "#FF6B6B",
-
-                                "#4D96FF",
-
-                                "#FFD93D",
-
-                                "#6BCB77",
-
-                                "#C77DFF"
-
-                            ],
-
-                            borderWidth: 3,
-
-                            borderColor: "#ffffff"
-
+                            data:
+                                categories.map(
+                                    category =>
+                                        totals[
+                                            category
+                                        ]
+                                )
                         }
-
                     ]
 
                 },
-
-
-                plugins: chartPlugins,
-
 
                 options: {
 
                     responsive: true,
 
-                    maintainAspectRatio: false,
-
+                    maintainAspectRatio:
+                        false,
 
                     plugins: {
 
                         legend: {
-
-                            position: "bottom"
-
+                            position:
+                                "bottom"
                         },
-
 
                         datalabels: {
 
-                            color: "#000000",
-
-                            font: {
-
-                                weight: "bold",
-
-                                size: 16
-
-                            },
-
-
                             formatter:
-                                function(value) {
+                                (
+                                    value,
+                                    context
+                                ) => {
 
-                                    if (
-                                        value <= 0
-                                    ) {
+                                    const data =
+                                        context
+                                            .chart
+                                            .data
+                                            .datasets[0]
+                                            .data;
 
-                                        return "";
 
-                                    }
+                                    const total =
+                                        data.reduce(
+                                            (a, b) =>
+                                                a + b,
+                                            0
+                                        );
 
-                                    return "₹" +
-                                        value;
+
+                                    return Math.round(
+                                        (value /
+                                            total) *
+                                        100
+                                    ) + "%";
 
                                 }
 
@@ -989,181 +1113,244 @@ function updateChart() {
 
                     }
 
-                }
+                },
+
+                plugins:
+                    typeof ChartDataLabels !==
+                    "undefined"
+
+                        ? [ChartDataLabels]
+
+                        : []
 
             }
         );
 
+
+    updateAnalyticsCategorySummary();
 }
 
 
-// ======================================================
-// MONEY MOOD
-// ======================================================
+// ANALYTICS CATEGORY SUMMARY
+function updateAnalyticsCategorySummary() {
 
-function displayMoneyMood() {
-
-    const mood =
+    const container =
         document.getElementById(
-            "moneyMood"
+            "analyticsCategorySummary"
         );
 
+    if (!container) return;
 
-    if (!mood) {
+
+    const totals =
+        getCategoryTotals();
+
+    const categories =
+        Object.keys(totals);
+
+
+    if (categories.length === 0) {
+
+        container.innerHTML = "";
+
         return;
     }
 
 
+    const total =
+        getTotalSpent();
+
+
+    container.innerHTML = `
+
+        <div class="category-summary-card">
+
+            <h2>📊 Spending Breakdown</h2>
+
+            ${categories.map(
+                category => {
+
+                    const percentage =
+                        total > 0
+
+                            ? Math.round(
+                                (
+                                    totals[
+                                        category
+                                    ] /
+                                    total
+                                ) * 100
+                            )
+
+                            : 0;
+
+
+                    return `
+
+                        <div class="summary-row">
+
+                            <span>
+                                ${escapeHTML(
+                                    category
+                                )}
+                            </span>
+
+                            <strong>
+                                ₹${totals[
+                                    category
+                                ].toLocaleString("en-IN")}
+                                (${percentage}%)
+                            </strong>
+
+                        </div>
+
+                    `;
+
+                }
+            ).join("")}
+
+        </div>
+
+    `;
+}
+// ======================================================
+// FINSIGHT - JAVASCRIPT
+// PART 3 OF 3
+// ======================================================
+
+
+// MONEY MOOD
+function updateMoneyMood() {
+
+    const container =
+        document.getElementById(
+            "moneyMood"
+        );
+
+    if (!container) return;
+
+
     if (expenses.length === 0) {
 
-        mood.innerHTML =
+        container.innerHTML = `
 
-            "<p>" +
-            "Add some expenses and FinSight will " +
-            "discover your money personality." +
-            "</p>";
+            <p>
+                Add some expenses and FinSight will
+                discover your money personality.
+            </p>
+
+        `;
 
         return;
-
     }
 
 
     const totals =
         getCategoryTotals();
 
-
-    let topCategory =
-        "Other";
-
-    let highest =
-        0;
+    const total =
+        getTotalSpent();
 
 
-    Object.keys(totals).forEach(
-        function(category) {
-
-            if (
+    const topCategory =
+        Object.keys(totals).reduce(
+            (top, category) =>
                 totals[category] >
-                highest
-            ) {
+                totals[top]
+                    ? category
+                    : top,
 
-                highest =
-                    totals[category];
-
-                topCategory =
-                    category;
-
-            }
-
-        }
-    );
+            Object.keys(totals)[0]
+        );
 
 
-    let moodTitle =
-        "";
+    const topPercentage =
+        total > 0
+            ? (
+                totals[topCategory] /
+                total
+            ) * 100
+            : 0;
 
-    let moodText =
-        "";
 
-    let emoji =
-        "";
+    let personality =
+        "Balanced Planner";
+
+
+    let message =
+        "You seem to keep a fairly balanced approach to spending.";
 
 
     if (topCategory === "Food") {
 
-        emoji = "🍔";
+        personality =
+            "Foodie Financier";
 
-        moodTitle =
-            "The Foodie";
-
-        moodText =
-            "Food is currently your biggest spending category. " +
-            "You really know how to enjoy the good stuff! 😋";
+        message =
+            "Food takes a big part of your spending. Enjoy it, but keep an eye on your food budget! 🍔";
 
     }
 
-    else if (
-        topCategory === "Shopping"
-    ) {
+    else if (topCategory === "Shopping") {
 
-        emoji = "🛍️";
+        personality =
+            "Smart Shopper";
 
-        moodTitle =
-            "The Trend Explorer";
-
-        moodText =
-            "Shopping is your biggest category. " +
-            "You love discovering new things! ✨";
+        message =
+            "Shopping is your biggest spending area. A little planning can help you save more. 🛍️";
 
     }
 
-    else if (
-        topCategory === "Travel"
-    ) {
+    else if (topCategory === "Travel") {
 
-        emoji = "✈️";
+        personality =
+            "Adventure Spender";
 
-        moodTitle =
-            "The Explorer";
-
-        moodText =
-            "Travel takes the top spot. " +
-            "You value experiences and adventures! 🌍";
+        message =
+            "You love spending on experiences and travel. Keep exploring while staying within your limits! ✈️";
 
     }
 
-    else if (
-        topCategory === "Education"
-    ) {
+    else if (topCategory === "Education") {
 
-        emoji = "📚";
+        personality =
+            "Future Builder";
 
-        moodTitle =
-            "The Future Builder";
-
-        moodText =
-            "Education is your biggest category. " +
-            "You're investing in your future! 🚀";
+        message =
+            "You're investing in learning and your future. That's a powerful habit! 📚";
 
     }
 
-    else {
+    else if (topPercentage >= 60) {
 
-        emoji = "🌟";
+        personality =
+            "Focused Spender";
 
-        moodTitle =
-            "The Balanced Spender";
-
-        moodText =
-            "Your spending is spread across different areas. " +
-            "You have a balanced money style! 💰";
+        message =
+            "A large portion of your spending goes toward one category. Consider setting a category budget.";
 
     }
 
 
-    mood.innerHTML =
+    container.innerHTML = `
 
-        "<div class=\"mood-result\">" +
+        <div class="money-personality">
 
-        "<h2>" +
-        emoji +
-        " " +
-        moodTitle +
-        "</h2>" +
+            <h3>
+                ✨ ${personality}
+            </h3>
 
-        "<p>" +
-        moodText +
-        "</p>" +
+            <p>
+                ${message}
+            </p>
 
-        "</div>";
+        </div>
 
+    `;
 }
 
 
-// ======================================================
 // WHAT-IF SIMULATOR
-// ======================================================
-
 function updateSimulator() {
 
     const slider =
@@ -1171,28 +1358,7 @@ function updateSimulator() {
             "savingSlider"
         );
 
-
-    const savingAmount =
-        document.getElementById(
-            "savingAmount"
-        );
-
-
-    const monthlySaving =
-        document.getElementById(
-            "monthlySaving"
-        );
-
-
-    const yearlySaving =
-        document.getElementById(
-            "yearlySaving"
-        );
-
-
-    if (!slider) {
-        return;
-    }
+    if (!slider) return;
 
 
     const weekly =
@@ -1200,12 +1366,19 @@ function updateSimulator() {
 
 
     const monthly =
-        weekly * 4.33;
+        Math.round(
+            weekly * 52 / 12
+        );
 
 
     const yearly =
         weekly * 52;
 
+
+    const savingAmount =
+        document.getElementById(
+            "savingAmount"
+        );
 
     if (savingAmount) {
 
@@ -1215,54 +1388,58 @@ function updateSimulator() {
     }
 
 
+    const monthlySaving =
+        document.getElementById(
+            "monthlySaving"
+        );
+
     if (monthlySaving) {
 
         monthlySaving.textContent =
-            Math.round(monthly);
+            monthly.toLocaleString("en-IN");
 
     }
 
+
+    const yearlySaving =
+        document.getElementById(
+            "yearlySaving"
+        );
 
     if (yearlySaving) {
 
         yearlySaving.textContent =
-            Math.round(yearly);
+            yearly.toLocaleString("en-IN");
 
     }
-
 }
 
 
-// ======================================================
-// COMPLETE SIMULATION
-// ======================================================
-
+// COMPLETE SIMULATOR
 function completeSimulator() {
 
-    simulatorUsed = true;
+    const slider =
+        document.getElementById(
+            "savingSlider"
+        );
 
 
-    localStorage.setItem(
-        "simulatorUsed",
-        "true"
-    );
+    const amount =
+        slider
+            ? Number(slider.value)
+            : 0;
 
 
     showToast(
-        "Scenario saved! Small changes can make a big difference. 🚀",
-        "🔮"
+        "✨",
+        `You could save ₹${(
+            amount * 52
+        ).toLocaleString("en-IN")} a year!`
     );
-
-
-    updateJourney();
-
 }
 
 
-// ======================================================
 // MONEY JOURNEY
-// ======================================================
-
 function updateJourney() {
 
     const progress =
@@ -1270,373 +1447,392 @@ function updateJourney() {
             "journeyProgress"
         );
 
-
     const level =
         document.getElementById(
             "journeyLevel"
         );
 
-
     const achievements =
         document.getElementById(
             "achievements"
         );
 
 
+    const count =
+        expenses.length;
+
+
+    let levelNumber = 1;
+
+    let levelName =
+        "Money Beginner";
+
+
+    if (count >= 5) {
+
+        levelNumber = 2;
+
+        levelName =
+            "Money Learner";
+    }
+
+
+    if (count >= 10) {
+
+        levelNumber = 3;
+
+        levelName =
+            "Money Tracker";
+    }
+
+
+    if (count >= 20) {
+
+        levelNumber = 4;
+
+        levelName =
+            "Money Master";
+    }
+
+
+    if (count >= 50) {
+
+        levelNumber = 5;
+
+        levelName =
+            "Money Champion";
+    }
+
+
+    const percentage =
+        Math.min(
+            count * 5,
+            100
+        );
+
+
+    if (progress) {
+
+        progress.style.width =
+            percentage + "%";
+
+    }
+
+
+    if (level) {
+
+        level.textContent =
+            `Level ${levelNumber} — ${levelName}`;
+
+    }
+
+
+    if (!achievements) return;
+
+
+    const achievementList = [];
+
+
+    if (count >= 1) {
+
+        achievementList.push(
+            "🌱 First Expense"
+        );
+
+    }
+
+
+    if (count >= 5) {
+
+        achievementList.push(
+            "🔥 5 Expenses Tracked"
+        );
+
+    }
+
+
+    if (count >= 10) {
+
+        achievementList.push(
+            "⭐ 10 Expenses Tracked"
+        );
+
+    }
+
+
     if (
-        !progress ||
-        !level ||
-        !achievements
+        budget > 0 &&
+        getTotalSpent() <= budget
     ) {
 
-        return;
+        achievementList.push(
+            "💰 Budget Guardian"
+        );
 
     }
 
 
-    let points =
-        0;
+    if (savingsChallenges > 0) {
 
-
-    // Add first expense
-
-    if (expenses.length >= 1) {
-
-        points += 20;
+        achievementList.push(
+            "🏆 Savings Challenge Completed"
+        );
 
     }
 
 
-    // Add five expenses
+    if (
+        achievementList.length === 0
+    ) {
 
-    if (expenses.length >= 5) {
-
-        points += 20;
-
-    }
-
-
-    // View analytics
-
-    if (analyticsViewed) {
-
-        points += 20;
-
-    }
-
-
-    // Try simulator
-
-    if (simulatorUsed) {
-
-        points += 20;
-
-    }
-
-
-    // Complete challenge
-
-    if (challengeCompleted) {
-
-        points += 20;
-
-    }
-
-
-    progress.style.width =
-        points + "%";
-
-
-    if (points >= 100) {
-
-        level.textContent =
-            "Level 5 — Money Master 🏆";
-
-    }
-
-    else if (points >= 80) {
-
-        level.textContent =
-            "Level 4 — Money Strategist 🚀";
-
-    }
-
-    else if (points >= 60) {
-
-        level.textContent =
-            "Level 3 — Smart Spender 💡";
-
-    }
-
-    else if (points >= 40) {
-
-        level.textContent =
-            "Level 2 — Money Explorer 🌟";
+        achievements.innerHTML =
+            "<p>Keep tracking to unlock achievements! 🎯</p>";
 
     }
 
     else {
 
-        level.textContent =
-            "Level 1 — Money Beginner 🌱";
+        achievements.innerHTML =
+            achievementList.map(
+                item => `
+
+                    <div class="achievement">
+                        ${item}
+                    </div>
+
+                `
+            ).join("");
 
     }
-
-
-    achievements.innerHTML = "";
-
-
-    if (expenses.length >= 1) {
-
-        createAchievement(
-            "💸",
-            "First Expense",
-            "You added your first expense!"
-        );
-
-    }
-
-
-    if (expenses.length >= 5) {
-
-        createAchievement(
-            "🔥",
-            "Expense Tracker",
-            "You tracked 5 expenses!"
-        );
-
-    }
-
-
-    if (analyticsViewed) {
-
-        createAchievement(
-            "📊",
-            "Data Detective",
-            "You checked your spending analytics!"
-        );
-
-    }
-
-
-    if (simulatorUsed) {
-
-        createAchievement(
-            "🔮",
-            "Future Planner",
-            "You tried the What-If Simulator!"
-        );
-
-    }
-
-
-    if (challengeCompleted) {
-
-        createAchievement(
-            "🏆",
-            "Savings Champion",
-            "You completed a savings challenge!"
-        );
-
-    }
-
 }
 
 
-// ======================================================
-// CREATE ACHIEVEMENT
-// ======================================================
-
-function createAchievement(
-    icon,
-    title,
-    description
-) {
-
-    const achievements =
-        document.getElementById(
-            "achievements"
-        );
-
-
-    if (!achievements) {
-        return;
-    }
-
-
-    const achievement =
-        document.createElement(
-            "div"
-        );
-
-
-    achievement.className =
-        "achievement";
-
-
-    achievement.innerHTML =
-
-        "<span class=\"achievement-icon\">" +
-
-        icon +
-
-        "</span>" +
-
-        "<div>" +
-
-        "<strong>" +
-        escapeHTML(title) +
-        "</strong>" +
-
-        "<p>" +
-        escapeHTML(description) +
-        "</p>" +
-
-        "</div>";
-
-
-    achievements.appendChild(
-        achievement
-    );
-
-}
-
-
-// ======================================================
 // SAVINGS CHALLENGE
-// ======================================================
-
 function completeSavingsChallenge() {
 
-    challengeCompleted =
-        true;
+    savingsChallenges++;
 
-
-    localStorage.setItem(
-        "challengeCompleted",
-        "true"
-    );
-
-
-    showToast(
-        "Savings Challenge completed! 🏆",
-        "💰"
-    );
-
+    saveData();
 
     updateJourney();
 
+
+    showToast(
+        "🏆",
+        "Savings challenge completed!"
+    );
 }
 
 
-// ======================================================
-// ESCAPE HTML
-// ======================================================
+// TOAST
+function showToast(
+    icon,
+    message
+) {
 
-function escapeHTML(value) {
-
-    const div =
-        document.createElement(
-            "div"
+    const toast =
+        document.getElementById(
+            "toast"
         );
 
 
-    div.textContent =
-        value;
+    const toastIcon =
+        document.getElementById(
+            "toastIcon"
+        );
 
 
-    return div.innerHTML;
+    const toastMessage =
+        document.getElementById(
+            "toastMessage"
+        );
 
+
+    if (!toast) return;
+
+
+    if (toastIcon) {
+
+        toastIcon.textContent =
+            icon;
+
+    }
+
+
+    if (toastMessage) {
+
+        toastMessage.textContent =
+            message;
+
+    }
+
+
+    toast.classList.add(
+        "show"
+    );
+
+
+    setTimeout(() => {
+
+        toast.classList.remove(
+            "show"
+        );
+
+    }, 3000);
 }
 
 
-// ======================================================
 // ENTER KEY SUPPORT
-// ======================================================
+function setupEnterKey() {
 
+    const inputs =
+        document.querySelectorAll(
+            "#add input"
+        );
+
+
+    inputs.forEach(input => {
+
+        input.addEventListener(
+            "keydown",
+            event => {
+
+                if (
+                    event.key === "Enter"
+                ) {
+
+                    addExpense();
+
+                }
+
+            }
+        );
+
+    });
+}
+
+
+// SECURITY HELPERS
+function escapeHTML(value) {
+
+    return String(value)
+
+        .replaceAll(
+            "&",
+            "&amp;"
+        )
+
+        .replaceAll(
+            "<",
+            "&lt;"
+        )
+
+        .replaceAll(
+            ">",
+            "&gt;"
+        )
+
+        .replaceAll(
+            '"',
+            "&quot;"
+        )
+
+        .replaceAll(
+            "'",
+            "&#039;"
+        );
+}
+
+
+function escapeAttribute(value) {
+
+    return String(value)
+
+        .replaceAll(
+            "\\",
+            "\\\\"
+        )
+
+        .replaceAll(
+            "'",
+            "\\'"
+        );
+}
+
+
+// UPDATE EVERYTHING
+function updateAll() {
+
+    updateHome();
+
+    updateExpenseList();
+
+    updateCategorySummary();
+
+    updateDashboard();
+
+    updateBudget();
+
+    updateCategoryBudgets();
+
+    updateAnalytics();
+
+    updateMoneyMood();
+
+    updateSimulator();
+
+    updateJourney();
+}
+
+
+// INITIALIZE
 document.addEventListener(
-    "keydown",
-    function(event) {
+    "DOMContentLoaded",
+    () => {
 
-        if (
-            event.key === "Enter" &&
-            document.activeElement &&
-            (
-                document.activeElement.id ===
-                "expenseName" ||
+        updateGreeting();
 
-                document.activeElement.id ===
-                "expenseAmount" ||
 
-                document.activeElement.id ===
-                "expenseCategory" ||
-
-                document.activeElement.id ===
+        const dateInput =
+            document.getElementById(
                 "expenseDate"
-            )
-        ) {
+            );
 
-            event.preventDefault();
 
-            addExpense();
+        if (dateInput) {
+
+            dateInput.value =
+                getTodayDate();
 
         }
+
+
+        const slider =
+            document.getElementById(
+                "savingSlider"
+            );
+
+
+        if (slider) {
+
+            slider.addEventListener(
+                "input",
+                updateSimulator
+            );
+
+        }
+
+
+        setupEnterKey();
+
+        updateAll();
 
     }
 );
 
 
-// ======================================================
-// SLIDER SUPPORT
-// ======================================================
-
-const savingSlider =
-    document.getElementById(
-        "savingSlider"
-    );
-function updateGreeting() {
-    const hour = new Date().getHours();
-    const greeting = document.getElementById("greeting");
-
-    if (hour >= 5 && hour < 12) {
-        greeting.textContent = "Good Morning! 👋";
-    } else if (hour >= 12 && hour < 17) {
-        greeting.textContent = "Good Afternoon! ☀️";
-    } else if (hour >= 17 && hour < 21) {
-        greeting.textContent = "Good Evening! 🌆";
-    } else {
-        greeting.textContent = "Good Night! 🌙";
-    }
-}
-
-updateGreeting();
-
-if (savingSlider) {
-
-    savingSlider.addEventListener(
-        "input",
-        updateSimulator
-    );
-
-}
-
-
-// ======================================================
-// STARTUP
-// ======================================================
-
-displayExpenses();
-
-updateDashboard();
-
-updateHomeSnapshot();
-
-displayAnalyticsSummary();
-
-updateSimulator();
-
-updateJourney();
-
-showSection("home");
-
-
+// UPDATE GREETING EVERY MINUTE
+setInterval(
+    updateGreeting,
+    60000
+);
