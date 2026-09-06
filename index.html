@@ -30,7 +30,7 @@
     <section id="home" class="app-section active-section">
 
         <div class="hero-card">
-            <h2 id="greeting">Good Morning! 👋</h2>
+            <h2 id="greeting"></h2>
             <p>Take control of your money, one expense at a time.</p>
         </div>
 
@@ -53,11 +53,17 @@
             </div>
         </div>
 
+
+        <!-- QUICK ACTIONS -->
         <div class="quick-actions">
             <h2>⚡ Quick Actions</h2>
 
             <button type="button" onclick="showSection('add')">
                 ➕ Add Expense
+            </button>
+
+            <button type="button" onclick="showSection('budget')">
+                💰 My Budget
             </button>
 
             <button type="button" onclick="showSection('analytics')">
@@ -108,9 +114,13 @@
             <select id="expenseCategory">
                 <option>Select Category</option>
                 <option>Food</option>
+                <option>Groceries</option>
                 <option>Travel</option>
                 <option>Shopping</option>
                 <option>Education</option>
+                <option>Bills</option>
+                <option>Health</option>
+                <option>Entertainment</option>
                 <option>Other</option>
             </select>
 
@@ -121,6 +131,100 @@
             <p class="form-hint">
                 💡 Press Enter to quickly add an expense.
             </p>
+
+        </div>
+
+    </section>
+
+
+    <!-- BUDGET -->
+    <section id="budget" class="app-section">
+
+        <div class="budget-card">
+
+            <h2>💰 My Budget</h2>
+
+            <p>
+                Set a spending limit and stay in control of your money.
+            </p>
+
+            <input
+                type="number"
+                id="budgetAmount"
+                placeholder="Enter monthly budget"
+                min="0"
+            >
+
+            <button type="button" onclick="setBudget()">
+                🎯 Set Budget
+            </button>
+
+            <div class="budget-summary">
+
+                <div class="budget-item">
+                    <span>💰 Budget</span>
+                    <strong>
+                        ₹<span id="budgetTotal">0</span>
+                    </strong>
+                </div>
+
+                <div class="budget-item">
+                    <span>💸 Spent</span>
+                    <strong>
+                        ₹<span id="budgetSpent">0</span>
+                    </strong>
+                </div>
+
+                <div class="budget-item">
+                    <span>💵 Remaining</span>
+                    <strong>
+                        ₹<span id="budgetRemaining">0</span>
+                    </strong>
+                </div>
+
+            </div>
+
+            <div class="budget-progress">
+                <div
+                    id="budgetProgress"
+                    class="budget-progress-fill"
+                ></div>
+            </div>
+
+            <p id="budgetMessage">
+                Set your budget to start tracking.
+            </p>
+
+        </div>
+
+
+        <!-- CATEGORY BUDGET -->
+        <div class="category-budget-card">
+
+            <h2>🛒 Category Budgets</h2>
+
+            <p>
+                Set limits for categories such as groceries, food and travel.
+            </p>
+
+            <input
+                type="text"
+                id="categoryBudgetName"
+                placeholder="Category name"
+            >
+
+            <input
+                type="number"
+                id="categoryBudgetAmount"
+                placeholder="Category limit"
+                min="0"
+            >
+
+            <button type="button" onclick="setCategoryBudget()">
+                ➕ Add Category Budget
+            </button>
+
+            <div id="categoryBudgetList"></div>
 
         </div>
 
@@ -171,6 +275,13 @@
                 <span>📈 Average Expense</span>
                 <strong>
                     ₹<span id="averageExpense">0</span>
+                </strong>
+            </div>
+
+            <div class="dashboard-item">
+                <span>💰 Budget Remaining</span>
+                <strong>
+                    ₹<span id="dashboardBudgetRemaining">0</span>
                 </strong>
             </div>
 
