@@ -1,0 +1,1021 @@
+/* =====================================================
+   FINSIGHT - COLORFUL APP DESIGN
+   ===================================================== */
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    margin: 0;
+    padding: 20px 15px 100px 15px;
+
+    font-family: Arial, sans-serif;
+
+    color: #27213a;
+
+    background:
+        linear-gradient(
+            135deg,
+            #eee6ff 0%,
+            #e5f4ff 45%,
+            #ffe5f2 100%
+        );
+
+    min-height: 100vh;
+}
+
+
+/* =====================================================
+   HEADER
+   ===================================================== */
+
+.app-header {
+    text-align: center;
+
+    padding: 20px;
+
+    margin-bottom: 20px;
+
+    border-radius: 22px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #7b2cbf,
+            #6366f1,
+            #ec4899
+        );
+
+    color: white;
+
+    box-shadow:
+        0 10px 25px rgba(99, 102, 241, 0.25);
+}
+
+.app-header h1 {
+    margin: 0;
+
+    font-size: 32px;
+}
+
+.app-header p {
+    margin: 8px 0 0;
+
+    font-size: 15px;
+}
+
+
+/* =====================================================
+   SECTIONS
+   ===================================================== */
+
+.app-section {
+    display: none;
+
+    max-width: 650px;
+
+    margin: 0 auto;
+}
+
+.active-section {
+    display: block;
+
+    animation:
+        sectionAppear 0.3s ease;
+}
+
+@keyframes sectionAppear {
+
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+/* =====================================================
+   HOME
+   ===================================================== */
+
+.hero-card {
+    padding: 25px;
+
+    margin-bottom: 18px;
+
+    border-radius: 22px;
+
+    color: white;
+
+    background:
+        linear-gradient(
+            135deg,
+            #6366f1,
+            #8b5cf6
+        );
+
+    box-shadow:
+        0 10px 25px rgba(99, 102, 241, 0.25);
+}
+
+.hero-card h2 {
+    margin-top: 0;
+}
+
+.hero-card p {
+    margin-bottom: 0;
+}
+
+
+/* =====================================================
+   MONEY SNAPSHOT
+   ===================================================== */
+
+.snapshot-card {
+    padding: 22px;
+
+    margin-bottom: 18px;
+
+    border-radius: 22px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #ffffff,
+            #f3e8ff
+        );
+
+    box-shadow:
+        0 8px 22px rgba(80, 60, 120, 0.12);
+}
+
+.snapshot-card h2 {
+    margin-top: 0;
+
+    color: #6d28d9;
+}
+
+.snapshot-item {
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    padding: 14px;
+
+    margin: 10px 0;
+
+    border-radius: 14px;
+
+    background:
+        linear-gradient(
+            90deg,
+            #fce7f3,
+            #ede9fe
+        );
+}
+
+.snapshot-item strong {
+    color: #5b21b6;
+}
+
+
+/* =====================================================
+   QUICK ACTIONS
+   ===================================================== */
+
+.quick-actions {
+    padding: 22px;
+
+    margin-bottom: 20px;
+
+    border-radius: 22px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #fff7ed,
+            #fce7f3
+        );
+
+    box-shadow:
+        0 8px 22px rgba(120, 70, 100, 0.12);
+}
+
+.quick-actions h2 {
+    margin-top: 0;
+
+    color: #be185d;
+}
+
+.quick-actions button {
+    margin-bottom: 10px;
+}
+
+
+/* =====================================================
+   GENERAL BUTTONS
+   ===================================================== */
+
+button {
+    border: none;
+
+    border-radius: 12px;
+
+    padding: 13px 16px;
+
+    font-size: 16px;
+
+    font-weight: bold;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+button:hover {
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 6px 15px rgba(80, 50, 120, 0.18);
+}
+
+button:active {
+    transform: scale(0.97);
+}
+
+.quick-actions button {
+    width: 100%;
+
+    color: white;
+
+    background:
+        linear-gradient(
+            135deg,
+            #6366f1,
+            #a855f7
+        );
+}
+
+
+/* =====================================================
+   FORM
+   ===================================================== */
+
+.form-card {
+    padding: 25px;
+
+    border-radius: 22px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #ffffff,
+            #fce7f3
+        );
+
+    box-shadow:
+        0 10px 25px rgba(100, 60, 130, 0.13);
+}
+
+.form-card h2 {
+    margin-top: 0;
+
+    color: #7e22ce;
+}
+
+input,
+select {
+    width: 100%;
+
+    padding: 14px;
+
+    margin-bottom: 14px;
+
+    border: 2px solid #ddd6fe;
+
+    border-radius: 12px;
+
+    font-size: 16px;
+
+    outline: none;
+
+    background: white;
+}
+
+input:focus,
+select:focus {
+    border-color: #8b5cf6;
+
+    box-shadow:
+        0 0 0 3px rgba(139, 92, 246, 0.12);
+}
+
+.form-card button {
+    width: 100%;
+
+    color: white;
+
+    background:
+        linear-gradient(
+            135deg,
+            #16a34a,
+            #22c55e
+        );
+}
+
+.form-hint {
+    text-align: center;
+
+    color: #6b7280;
+
+    font-size: 13px;
+}
+
+
+/* =====================================================
+   EXPENSES
+   ===================================================== */
+
+.expenses-card {
+    padding: 22px;
+
+    margin-bottom: 18px;
+
+    border-radius: 22px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #eff6ff,
+            #ffffff
+        );
+
+    box-shadow:
+        0 8px 22px rgba(50, 80, 140, 0.12);
+}
+
+.expenses-card h2 {
+    color: #1d4ed8;
+}
+
+
+/* Individual expense */
+
+#expenseList {
+    margin-top: 15px;
+}
+
+#expenseList > div {
+    padding: 16px;
+
+    margin-bottom: 12px;
+
+    border-radius: 16px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #ffffff,
+            #fdf2f8
+        );
+
+    border-left: 6px solid #8b5cf6;
+
+    box-shadow:
+        0 5px 15px rgba(80, 60, 120, 0.08);
+
+    text-align: left;
+}
+
+#expenseList > div > div:first-child {
+    font-weight: bold;
+
+    font-size: 16px;
+
+    margin-bottom: 7px;
+}
+
+#expenseList > div > div:nth-child(2) {
+    color: #6b7280;
+
+    font-size: 13px;
+}
+
+#expenseList button {
+    margin-top: 10px;
+
+    padding: 8px 12px;
+
+    color: white;
+
+    background:
+        linear-gradient(
+            135deg,
+            #ef4444,
+            #f97316
+        );
+
+    font-size: 13px;
+}
+
+
+/* =====================================================
+   TOTAL
+   ===================================================== */
+
+.total-box {
+    padding: 17px;
+
+    border-radius: 15px;
+
+    text-align: center;
+
+    color: white;
+
+    background:
+        linear-gradient(
+            135deg,
+            #7c3aed,
+            #ec4899
+        );
+}
+
+
+/* =====================================================
+   CATEGORY SUMMARY
+   ===================================================== */
+
+.category-card {
+    padding: 22px;
+
+    margin-bottom: 18px;
+
+    border-radius: 22px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #ecfeff,
+            #ede9fe
+        );
+
+    box-shadow:
+        0 8px 20px rgba(70, 70, 130, 0.10);
+}
+
+.category-card h2,
+.category-card h3 {
+    color: #4338ca;
+}
+
+.category-card p {
+    padding: 12px;
+
+    margin: 8px 0;
+
+    border-radius: 12px;
+
+    background: white;
+
+    font-weight: bold;
+}
+
+
+/* =====================================================
+   DASHBOARD
+   ===================================================== */
+
+.dashboard-card {
+    padding: 22px;
+
+    border-radius: 22px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #fef3c7,
+            #fff7ed
+        );
+
+    box-shadow:
+        0 8px 22px rgba(130, 90, 40, 0.12);
+}
+
+.dashboard-card h2 {
+    color: #b45309;
+}
+
+.dashboard-item {
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    padding: 18px;
+
+    margin: 12px 0;
+
+    border-radius: 15px;
+
+    background: white;
+
+    box-shadow:
+        0 4px 12px rgba(100, 70, 30, 0.07);
+}
+
+.dashboard-item strong {
+    color: #c2410c;
+
+    font-size: 18px;
+}
+
+
+/* =====================================================
+   ANALYTICS
+   ===================================================== */
+
+.analytics-card {
+    padding: 22px;
+
+    border-radius: 22px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #f5f3ff,
+            #e0f2fe
+        );
+
+    box-shadow:
+        0 8px 22px rgba(70, 60, 140, 0.12);
+}
+
+.analytics-card h2 {
+    color: #6d28d9;
+}
+
+.chart-wrapper {
+    position: relative;
+
+    width: 100%;
+
+    height: 350px;
+
+    margin-top: 15px;
+
+    padding: 10px;
+
+    border-radius: 18px;
+
+    background: white;
+}
+
+#expenseChart {
+    width: 100% !important;
+
+    height: 100% !important;
+}
+
+
+/* =====================================================
+   MONEY MOOD
+   ===================================================== */
+
+.mood-card {
+    padding: 25px;
+
+    border-radius: 22px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #fce7f3,
+            #ede9fe
+        );
+
+    box-shadow:
+        0 8px 22px rgba(120, 60, 130, 0.13);
+}
+
+.mood-card h2 {
+    color: #be185d;
+}
+
+.mood-card > div {
+    padding: 18px;
+
+    border-radius: 16px;
+
+    background: white;
+}
+
+.story-box {
+    margin-top: 15px;
+
+    padding: 15px;
+
+    border-radius: 14px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #fef3c7,
+            #fce7f3
+        );
+}
+
+
+/* =====================================================
+   SIMULATOR
+   ===================================================== */
+
+.simulator-card {
+    padding: 25px;
+
+    border-radius: 22px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #e0f2fe,
+            #ede9fe
+        );
+
+    box-shadow:
+        0 8px 22px rgba(70, 80, 140, 0.13);
+}
+
+.simulator-card h2 {
+    color: #4338ca;
+}
+
+.simulator-card input[type="range"] {
+    padding: 0;
+
+    margin: 20px 0;
+}
+
+.slider-labels {
+    display: flex;
+
+    justify-content: space-between;
+
+    color: #6b7280;
+
+    font-size: 13px;
+}
+
+.saving-results {
+    display: flex;
+
+    gap: 12px;
+
+    margin: 20px 0;
+}
+
+.saving-results > div {
+    flex: 1;
+
+    padding: 18px;
+
+    border-radius: 16px;
+
+    text-align: center;
+
+    background: white;
+
+    box-shadow:
+        0 5px 12px rgba(70, 60, 130, 0.08);
+}
+
+.saving-results strong {
+    display: block;
+
+    margin-top: 8px;
+
+    color: #7c3aed;
+
+    font-size: 20px;
+}
+
+.simulator-card > button {
+    width: 100%;
+
+    color: white;
+
+    background:
+        linear-gradient(
+            135deg,
+            #7c3aed,
+            #ec4899
+        );
+}
+
+
+/* =====================================================
+   JOURNEY
+   ===================================================== */
+
+.journey-card {
+    padding: 25px;
+
+    border-radius: 22px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #fff7ed,
+            #fef3c7
+        );
+
+    box-shadow:
+        0 8px 22px rgba(130, 90, 40, 0.12);
+}
+
+.journey-card h2 {
+    color: #92400e;
+}
+
+.progress-bar {
+    width: 100%;
+
+    height: 15px;
+
+    margin: 15px 0;
+
+    overflow: hidden;
+
+    border-radius: 20px;
+
+    background: #e5e7eb;
+}
+
+.progress-fill {
+    width: 0%;
+
+    height: 100%;
+
+    border-radius: 20px;
+
+    background:
+        linear-gradient(
+            90deg,
+            #22c55e,
+            #06b6d4,
+            #8b5cf6,
+            #ec4899
+        );
+
+    transition: width 0.5s ease;
+}
+
+
+/* Achievements */
+
+.achievement {
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    padding: 14px;
+
+    margin: 10px 0;
+
+    border-radius: 15px;
+
+    background: white;
+
+    box-shadow:
+        0 4px 12px rgba(80, 60, 50, 0.07);
+}
+
+.achievement > span {
+    font-size: 27px;
+}
+
+.achievement > div {
+    flex: 1;
+}
+
+.achievement p {
+    margin: 4px 0 0;
+
+    font-size: 12px;
+
+    color: #6b7280;
+}
+
+.achievement.locked {
+    opacity: 0.55;
+}
+
+.achievement.unlocked {
+    border-left: 5px solid #22c55e;
+}
+
+.journey-card > button {
+    width: 100%;
+
+    margin-top: 15px;
+
+    color: white;
+
+    background:
+        linear-gradient(
+            135deg,
+            #f59e0b,
+            #ef4444
+        );
+}
+
+
+/* =====================================================
+   BOTTOM NAVIGATION
+   ===================================================== */
+
+.bottom-nav {
+    position: fixed;
+
+    left: 50%;
+
+    bottom: 12px;
+
+    transform: translateX(-50%);
+
+    width: calc(100% - 20px);
+
+    max-width: 650px;
+
+    display: flex;
+
+    justify-content: space-around;
+
+    align-items: center;
+
+    padding: 8px;
+
+    border-radius: 22px;
+
+    background:
+        rgba(255, 255, 255, 0.94);
+
+    box-shadow:
+        0 8px 30px rgba(60, 40, 100, 0.20);
+
+    z-index: 1000;
+}
+
+.nav-btn {
+    flex: 1;
+
+    padding: 8px 4px;
+
+    background: transparent;
+
+    color: #6b7280;
+
+    font-size: 21px;
+
+    box-shadow: none;
+}
+
+.nav-btn span {
+    display: block;
+
+    margin-top: 3px;
+
+    font-size: 10px;
+
+    font-weight: bold;
+}
+
+.nav-btn.active {
+    color: #7c3aed;
+
+    background:
+        linear-gradient(
+            135deg,
+            #ede9fe,
+            #fce7f3
+        );
+
+    border-radius: 14px;
+}
+
+.nav-btn:hover {
+    box-shadow: none;
+}
+
+
+/* =====================================================
+   TOAST
+   ===================================================== */
+
+.toast {
+    position: fixed;
+
+    left: 50%;
+
+    bottom: 95px;
+
+    transform:
+        translateX(-50%)
+        translateY(20px);
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    padding: 13px 18px;
+
+    border-radius: 14px;
+
+    color: white;
+
+    background:
+        linear-gradient(
+            135deg,
+            #7c3aed,
+            #ec4899
+        );
+
+    box-shadow:
+        0 8px 20px rgba(80, 40, 120, 0.25);
+
+    opacity: 0;
+
+    pointer-events: none;
+
+    transition:
+        opacity 0.3s ease,
+        transform 0.3s ease;
+
+    z-index: 2000;
+}
+
+.toast.show {
+    opacity: 1;
+
+    transform:
+        translateX(-50%)
+        translateY(0);
+}
+
+
+/* =====================================================
+   MOBILE
+   ===================================================== */
+
+@media (max-width: 500px) {
+
+    body {
+        padding: 12px 10px 100px 10px;
+    }
+
+    .app-header h1 {
+        font-size: 27px;
+    }
+
+    .hero-card,
+    .snapshot-card,
+    .quick-actions,
+    .form-card,
+    .expenses-card,
+    .dashboard-card,
+    .analytics-card,
+    .mood-card,
+    .simulator-card,
+    .journey-card {
+        padding: 18px;
+    }
+
+    .chart-wrapper {
+        height: 300px;
+    }
+
+    .saving-results {
+        flex-direction: column;
+    }
+
+    .bottom-nav {
+        bottom: 8px;
+    }
+}

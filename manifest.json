@@ -1,0 +1,17 @@
+{
+  "name": "FinSight",
+  "short_name": "FinSight",
+  "description": "A smart and colorful expense tracker.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#eee6ff",
+  "theme_color": "#7c3aed",
+  "orientation": "portrait",
+  "icons": [
+  {
+    "src": "icon-512.png",
+    "sizes": "512x512",
+    "type": "image/png"
+  }
+]
+}
