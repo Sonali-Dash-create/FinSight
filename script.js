@@ -1,23 +1,48 @@
 // ======================================================
 // FINSIGHT - JAVASCRIPT
-// PART 1 OF 3
+// COMPLETE FIXED VERSION - PART 1
 // ======================================================
 
-// DATA
-let expenses = JSON.parse(localStorage.getItem("finsightExpenses")) || [];
-let budget = Number(localStorage.getItem("finsightBudget")) || 0;
+let expenses =
+    JSON.parse(localStorage.getItem("expenses")) || [];
+
+let budget =
+    Number(localStorage.getItem("finsightBudget")) || 0;
 
 let categoryBudgets =
-    JSON.parse(localStorage.getItem("finsightCategoryBudgets")) || {};
+    JSON.parse(
+        localStorage.getItem("finsightCategoryBudgets")
+    ) || {};
 
-let savingsChallenges =
-    Number(localStorage.getItem("finsightChallenges")) || 0;
+let total = 0;
+
+let expenseChart = null;
+
+let analyticsViewed =
+    localStorage.getItem("analyticsViewed") === "true";
+
+let simulatorUsed =
+    localStorage.getItem("simulatorUsed") === "true";
+
+let challengeCompleted =
+    localStorage.getItem("challengeCompleted") === "true";
 
 
+// ======================================================
 // SAVE DATA
+// ======================================================
+
 function saveData() {
-    localStorage.setItem("finsightExpenses", JSON.stringify(expenses));
-    localStorage.setItem("finsightBudget", budget);
+
+    localStorage.setItem(
+        "expenses",
+        JSON.stringify(expenses)
+    );
+
+    localStorage.setItem(
+        "finsightBudget",
+        String(budget)
+    );
 
     localStorage.setItem(
         "finsightCategoryBudgets",
@@ -25,1638 +50,277 @@ function saveData() {
     );
 
     localStorage.setItem(
-        "finsightChallenges",
-        savingsChallenges
+        "analyticsViewed",
+        String(analyticsViewed)
+    );
+
+    localStorage.setItem(
+        "simulatorUsed",
+        String(simulatorUsed)
+    );
+
+    localStorage.setItem(
+        "challengeCompleted",
+        String(challengeCompleted)
     );
 }
 
 
+// ======================================================
 // TODAY'S DATE
+// ======================================================
+
 function getTodayDate() {
+
     const today = new Date();
 
-    const year = today.getFullYear();
+    const year =
+        today.getFullYear();
 
-    const month = String(
-        today.getMonth() + 1
-    ).padStart(2, "0");
+    const month =
+        String(today.getMonth() + 1).padStart(2, "0");
 
-    const day = String(
-        today.getDate()
-    ).padStart(2, "0");
+    const day =
+        String(today.getDate()).padStart(2, "0");
 
-    return `${year}-${month}-${day}`;
+    return year + "-" + month + "-" + day;
 }
 
 
+// ======================================================
 // GREETING
+// ======================================================
+
 function updateGreeting() {
+
     const greeting =
         document.getElementById("greeting");
 
     if (!greeting) return;
 
-    const hour = new Date().getHours();
+    const hour =
+        new Date().getHours();
 
     if (hour < 12) {
+
         greeting.textContent =
-            "Good Morning! 👋";
-    }
-    else if (hour < 18) {
+            "Good Morning";
+
+    } else if (hour < 18) {
+
         greeting.textContent =
-            "Good Afternoon! ☀️";
-    }
-    else {
+            "Good Afternoon";
+
+    } else {
+
         greeting.textContent =
-            "Good Evening! 🌙";
+            "Good Evening";
+
     }
 }
 
 
-// SHOW SECTION
-function showSection(sectionId) {
+// ======================================================
+// NAVIGATION + BACK BUTTON
+// ======================================================
+
+let currentSection = "home";
+
+let navigationReady = false;
+
+
+function showSection(
+    sectionId,
+    fromHistory
+) {
+
+    const selectedSection =
+        document.getElementById(sectionId);
+
+    if (!selectedSection) return;
+
 
     const sections =
         document.querySelectorAll(".app-section");
 
-    sections.forEach(section => {
+    sections.forEach(function(section) {
+
         section.classList.remove(
             "active-section"
         );
+
     });
 
-    const selected =
-        document.getElementById(sectionId);
 
-    if (selected) {
-        selected.classList.add(
-            "active-section"
-        );
-    }
+    selectedSection.classList.add(
+        "active-section"
+    );
+
+
+    currentSection =
+        sectionId;
+
 
     const navButtons =
         document.querySelectorAll(".nav-btn");
 
-    navButtons.forEach(button => {
+    navButtons.forEach(function(button) {
+
         button.classList.remove("active");
+
     });
 
-    navButtons.forEach(button => {
 
-        const text =
+    navButtons.forEach(function(button) {
+
+        const onclick =
             button.getAttribute("onclick");
 
         if (
-            text &&
-            text.includes(`'${sectionId}'`)
+            onclick ===
+            "showSection('" +
+            sectionId +
+            "')"
         ) {
+
             button.classList.add("active");
+
         }
 
     });
 
-    updateAll();
-}
-
-
-// ADD EXPENSE
-function addExpense() {
-
-    const name =
-        document
-            .getElementById("expenseName")
-            .value
-            .trim();
-
-    const date =
-        document
-            .getElementById("expenseDate")
-            .value;
-
-    const amount =
-        Number(
-            document
-                .getElementById("expenseAmount")
-                .value
-        );
-
-    const category =
-        document
-            .getElementById("expenseCategory")
-            .value;
-
-
-    if (!name) {
-        showToast(
-            "⚠️",
-            "Please enter an expense name."
-        );
-        return;
-    }
-
-
-    if (!amount || amount <= 0) {
-        showToast(
-            "⚠️",
-            "Please enter a valid amount."
-        );
-        return;
-    }
-
 
     if (
-        !category ||
-        category === "Select Category"
+        navigationReady &&
+        !fromHistory
     ) {
-        showToast(
-            "⚠️",
-            "Please select a category."
-        );
-        return;
-    }
 
-
-    const expense = {
-
-        id: Date.now(),
-
-        name: name,
-
-        date:
-            date || getTodayDate(),
-
-        amount: amount,
-
-        category: category
-
-    };
-
-
-    expenses.push(expense);
-
-    saveData();
-
-    clearExpenseForm();
-
-    updateAll();
-
-    showToast(
-        "✅",
-        "Expense added successfully!"
-    );
-}
-
-
-// CLEAR EXPENSE FORM
-function clearExpenseForm() {
-
-    document
-        .getElementById("expenseName")
-        .value = "";
-
-    document
-        .getElementById("expenseDate")
-        .value = getTodayDate();
-
-    document
-        .getElementById("expenseAmount")
-        .value = "";
-
-    document
-        .getElementById("expenseCategory")
-        .value = "Select Category";
-}
-
-
-// DELETE EXPENSE
-function deleteExpense(id) {
-
-    expenses =
-        expenses.filter(
-            expense =>
-                expense.id !== id
-        );
-
-    saveData();
-
-    updateAll();
-
-    showToast(
-        "🗑️",
-        "Expense deleted."
-    );
-}
-
-
-// TOTAL
-function getTotalSpent() {
-
-    return expenses.reduce(
-        (total, expense) =>
-            total + Number(expense.amount),
-        0
-    );
-}
-
-
-// EXPENSE LIST
-function updateExpenseList() {
-
-    const list =
-        document.getElementById(
-            "expenseList"
-        );
-
-    if (!list) return;
-
-
-    if (expenses.length === 0) {
-
-        list.innerHTML =
-            "<p>No expenses added yet. 💸</p>";
-
-        return;
-    }
-
-
-    const sortedExpenses =
-        [...expenses].reverse();
-
-
-    list.innerHTML =
-        sortedExpenses.map(
-            expense => `
-
-        <div class="expense-item">
-
-            <div>
-
-                <strong>
-                    ${escapeHTML(expense.name)}
-                </strong>
-
-                <small>
-                    ${escapeHTML(expense.category)}
-                    •
-                    ${expense.date}
-                </small>
-
-            </div>
-
-            <div>
-
-                <strong>
-                    ₹${Number(
-                        expense.amount
-                    ).toLocaleString("en-IN")}
-                </strong>
-
-                <button
-                    type="button"
-                    onclick="deleteExpense(${expense.id})"
-                >
-                    🗑️
-                </button>
-
-            </div>
-
-        </div>
-
-    `
-        ).join("");
-}
-
-
-// CATEGORY TOTALS
-function getCategoryTotals() {
-
-    const totals = {};
-
-    expenses.forEach(expense => {
-
-        const category =
-            expense.category;
-
-        totals[category] =
-            (totals[category] || 0) +
-            Number(expense.amount);
-
-    });
-
-    return totals;
-}
-
-
-// CATEGORY SUMMARY
-function updateCategorySummary() {
-
-    const container =
-        document.getElementById(
-            "categorySummary"
-        );
-
-    if (!container) return;
-
-
-    const totals =
-        getCategoryTotals();
-
-    const categories =
-        Object.keys(totals);
-
-
-    if (categories.length === 0) {
-
-        container.innerHTML = "";
-
-        return;
-    }
-
-
-    container.innerHTML = `
-
-        <div class="category-summary-card">
-
-            <h2>📂 Category Summary</h2>
-
-            ${categories.map(
-                category => `
-
-                <div class="summary-row">
-
-                    <span>
-                        ${escapeHTML(category)}
-                    </span>
-
-                    <strong>
-                        ₹${totals[
-                            category
-                        ].toLocaleString("en-IN")}
-                    </strong>
-
-                </div>
-
-            `
-            ).join("")}
-
-        </div>
-
-    `;
-}
-
-
-// HOME SNAPSHOT
-function updateHome() {
-
-    const total =
-        getTotalSpent();
-
-
-    const homeTotal =
-        document.getElementById(
-            "homeTotal"
-        );
-
-    if (homeTotal) {
-
-        homeTotal.textContent =
-            total.toLocaleString("en-IN");
-
-    }
-
-
-    const homeCount =
-        document.getElementById(
-            "homeCount"
-        );
-
-    if (homeCount) {
-
-        homeCount.textContent =
-            expenses.length;
-
-    }
-
-
-    const categoryTotals =
-        getCategoryTotals();
-
-    let topCategory = "None";
-
-    const categories =
-        Object.keys(categoryTotals);
-
-
-    if (categories.length > 0) {
-
-        topCategory =
-            categories.reduce(
-                (top, category) =>
-
-                    categoryTotals[category] >
-                    categoryTotals[top]
-
-                        ? category
-                        : top,
-
-                categories[0]
-            );
-
-    }
-
-
-    const topElement =
-        document.getElementById(
-            "homeTopCategory"
-        );
-
-    if (topElement) {
-
-        topElement.textContent =
-            topCategory;
-
-    }
-}
-
-
-// DASHBOARD
-function updateDashboard() {
-
-    const total =
-        getTotalSpent();
-
-
-    const dashboardTotal =
-        document.getElementById(
-            "dashboardTotal"
-        );
-
-    if (dashboardTotal) {
-
-        dashboardTotal.textContent =
-            total.toLocaleString("en-IN");
-
-    }
-
-
-    const count =
-        document.getElementById(
-            "expenseCount"
-        );
-
-    if (count) {
-
-        count.textContent =
-            expenses.length;
-
-    }
-
-
-    const average =
-        expenses.length
-            ? total / expenses.length
-            : 0;
-
-
-    const averageElement =
-        document.getElementById(
-            "averageExpense"
-        );
-
-    if (averageElement) {
-
-        averageElement.textContent =
-            Math.round(
-                average
-            ).toLocaleString("en-IN");
-
-    }
-
-
-    const remaining =
-        Math.max(
-            budget - total,
-            0
-        );
-
-
-    const dashboardRemaining =
-        document.getElementById(
-            "dashboardBudgetRemaining"
-        );
-
-    if (dashboardRemaining) {
-
-        dashboardRemaining.textContent =
-            remaining.toLocaleString("en-IN");
-
-    }
-}
-// ======================================================
-// FINSIGHT - JAVASCRIPT
-// PART 2 OF 3
-// ======================================================
-
-
-// BUDGET
-function setBudget() {
-
-    const input =
-        document.getElementById(
-            "budgetAmount"
-        );
-
-    const amount =
-        Number(input.value);
-
-
-    if (!amount || amount <= 0) {
-
-        showToast(
-            "⚠️",
-            "Please enter a valid budget."
-        );
-
-        return;
-    }
-
-
-    budget = amount;
-
-    saveData();
-
-    input.value = "";
-
-    updateBudget();
-
-
-    showToast(
-        "🎯",
-        "Monthly budget set successfully!"
-    );
-}
-
-
-// UPDATE BUDGET
-function updateBudget() {
-
-    const total =
-        getTotalSpent();
-
-    const remaining =
-        budget - total;
-
-    const safeRemaining =
-        Math.max(
-            remaining,
-            0
-        );
-
-
-    const budgetTotal =
-        document.getElementById(
-            "budgetTotal"
-        );
-
-    if (budgetTotal) {
-
-        budgetTotal.textContent =
-            budget.toLocaleString("en-IN");
-
-    }
-
-
-    const budgetSpent =
-        document.getElementById(
-            "budgetSpent"
-        );
-
-    if (budgetSpent) {
-
-        budgetSpent.textContent =
-            total.toLocaleString("en-IN");
-
-    }
-
-
-    const budgetRemaining =
-        document.getElementById(
-            "budgetRemaining"
-        );
-
-    if (budgetRemaining) {
-
-        budgetRemaining.textContent =
-            safeRemaining.toLocaleString("en-IN");
-
-    }
-
-
-    const progress =
-        document.getElementById(
-            "budgetProgress"
-        );
-
-
-    let percentage = 0;
-
-
-    if (budget > 0) {
-
-        percentage =
-            (total / budget) * 100;
-
-    }
-
-
-    if (progress) {
-
-        progress.style.width =
-            Math.min(
-                percentage,
-                100
-            ) + "%";
-
-    }
-
-
-    const message =
-        document.getElementById(
-            "budgetMessage"
-        );
-
-
-    if (!message) return;
-
-
-    if (budget === 0) {
-
-        message.textContent =
-            "Set your budget to start tracking.";
-
-        return;
-    }
-
-
-    if (total > budget) {
-
-        message.textContent =
-            "🚨 You have exceeded your budget!";
-
-    }
-
-    else if (percentage >= 80) {
-
-        message.textContent =
-            "⚠️ You're close to your budget limit.";
-
-    }
-
-    else if (percentage >= 50) {
-
-        message.textContent =
-            "💡 More than half of your budget is used.";
-
-    }
-
-    else {
-
-        message.textContent =
-            "🎉 You're doing well! Keep tracking your spending.";
-
-    }
-}
-
-
-// CATEGORY BUDGET
-function setCategoryBudget() {
-
-    const nameInput =
-        document.getElementById(
-            "categoryBudgetName"
-        );
-
-    const amountInput =
-        document.getElementById(
-            "categoryBudgetAmount"
-        );
-
-
-    const category =
-        nameInput.value.trim();
-
-    const amount =
-        Number(amountInput.value);
-
-
-    if (!category) {
-
-        showToast(
-            "⚠️",
-            "Please enter a category."
-        );
-
-        return;
-    }
-
-
-    if (!amount || amount <= 0) {
-
-        showToast(
-            "⚠️",
-            "Please enter a valid category limit."
-        );
-
-        return;
-    }
-
-
-    categoryBudgets[category] =
-        amount;
-
-
-    saveData();
-
-
-    nameInput.value = "";
-
-    amountInput.value = "";
-
-
-    updateCategoryBudgets();
-
-
-    showToast(
-        "🎯",
-        `${category} budget added.`
-    );
-}
-
-
-// CATEGORY BUDGET DISPLAY
-function updateCategoryBudgets() {
-
-    const container =
-        document.getElementById(
-            "categoryBudgetList"
-        );
-
-    if (!container) return;
-
-
-    const categories =
-        Object.keys(
-            categoryBudgets
-        );
-
-
-    if (categories.length === 0) {
-
-        container.innerHTML =
-            "<p>No category budgets set yet.</p>";
-
-        return;
-    }
-
-
-    const totals =
-        getCategoryTotals();
-
-
-    container.innerHTML =
-        categories.map(
-            category => {
-
-                const limit =
-                    Number(
-                        categoryBudgets[
-                            category
-                        ]
-                    );
-
-
-                const spent =
-                    Number(
-                        totals[
-                            category
-                        ] || 0
-                    );
-
-
-                const remaining =
-                    limit - spent;
-
-
-                const percentage =
-                    limit > 0
-
-                        ? Math.min(
-                            (spent / limit) * 100,
-                            100
-                        )
-
-                        : 0;
-
-
-                let status =
-                    "✅ Within limit";
-
-
-                if (spent > limit) {
-
-                    status =
-                        "🚨 Budget exceeded";
-
-                }
-
-                else if (
-                    percentage >= 80
-                ) {
-
-                    status =
-                        "⚠️ Close to limit";
-
-                }
-
-
-                return `
-
-                    <div class="category-budget-item">
-
-                        <h3>
-                            ${escapeHTML(category)}
-                        </h3>
-
-                        <p>
-                            Spent:
-                            ₹${spent.toLocaleString("en-IN")}
-                        </p>
-
-                        <p>
-                            Limit:
-                            ₹${limit.toLocaleString("en-IN")}
-                        </p>
-
-                        <p>
-
-                            ${
-                                remaining >= 0
-
-                                    ? `Remaining: ₹${remaining.toLocaleString("en-IN")}`
-
-                                    : `Over by: ₹${Math.abs(
-                                        remaining
-                                    ).toLocaleString("en-IN")}`
-
-                            }
-
-                        </p>
-
-
-                        <div class="budget-progress">
-
-                            <div
-                                class="budget-progress-fill"
-                                style="width:${percentage}%"
-                            ></div>
-
-                        </div>
-
-
-                        <strong>
-                            ${status}
-                        </strong>
-
-
-                        <button
-                            type="button"
-                            onclick="deleteCategoryBudget('${escapeAttribute(category)}')"
-                        >
-                            🗑️ Remove
-                        </button>
-
-                    </div>
-
-                `;
-
-            }
-        ).join("");
-}
-
-
-// DELETE CATEGORY BUDGET
-function deleteCategoryBudget(
-    category
-) {
-
-    delete categoryBudgets[
-        category
-    ];
-
-    saveData();
-
-    updateCategoryBudgets();
-
-    showToast(
-        "🗑️",
-        "Category budget removed."
-    );
-}
-
-
-// ANALYTICS
-let expenseChart = null;
-
-
-function updateAnalytics() {
-
-    const message =
-        document.getElementById(
-            "analyticsMessage"
-        );
-
-
-    const totals =
-        getCategoryTotals();
-
-    const categories =
-        Object.keys(totals);
-
-
-    if (categories.length === 0) {
-
-        if (message) {
-
-            message.textContent =
-                "Add some expenses to see your spending pattern.";
-
-        }
-
-
-        if (expenseChart) {
-
-            expenseChart.destroy();
-
-            expenseChart = null;
-
-        }
-
-        return;
-    }
-
-
-    if (message) {
-
-        message.textContent =
-            "Here's how your spending is divided.";
-
-    }
-
-
-    const canvas =
-        document.getElementById(
-            "expenseChart"
-        );
-
-
-    if (!canvas) return;
-
-
-    if (
-        typeof Chart ===
-        "undefined"
-    ) {
-        return;
-    }
-
-
-    if (expenseChart) {
-
-        expenseChart.destroy();
-
-    }
-
-
-    expenseChart =
-        new Chart(
-            canvas.getContext("2d"),
+        history.pushState(
             {
-
-                type: "doughnut",
-
-                data: {
-
-                    labels:
-                        categories,
-
-                    datasets: [
-                        {
-                            data:
-                                categories.map(
-                                    category =>
-                                        totals[
-                                            category
-                                        ]
-                                )
-                        }
-                    ]
-
-                },
-
-                options: {
-
-                    responsive: true,
-
-                    maintainAspectRatio:
-                        false,
-
-                    plugins: {
-
-                        legend: {
-                            position:
-                                "bottom"
-                        },
-
-                        datalabels: {
-
-                            formatter:
-                                (
-                                    value,
-                                    context
-                                ) => {
-
-                                    const data =
-                                        context
-                                            .chart
-                                            .data
-                                            .datasets[0]
-                                            .data;
-
-
-                                    const total =
-                                        data.reduce(
-                                            (a, b) =>
-                                                a + b,
-                                            0
-                                        );
-
-
-                                    return Math.round(
-                                        (value /
-                                            total) *
-                                        100
-                                    ) + "%";
-
-                                }
-
-                        }
-
-                    }
-
-                },
-
-                plugins:
-                    typeof ChartDataLabels !==
-                    "undefined"
-
-                        ? [ChartDataLabels]
-
-                        : []
-
-            }
+                section: sectionId
+            },
+            "",
+            "#" + sectionId
         );
 
-
-    updateAnalyticsCategorySummary();
-}
-
-
-// ANALYTICS CATEGORY SUMMARY
-function updateAnalyticsCategorySummary() {
-
-    const container =
-        document.getElementById(
-            "analyticsCategorySummary"
-        );
-
-    if (!container) return;
-
-
-    const totals =
-        getCategoryTotals();
-
-    const categories =
-        Object.keys(totals);
-
-
-    if (categories.length === 0) {
-
-        container.innerHTML = "";
-
-        return;
     }
 
 
-    const total =
-        getTotalSpent();
+    if (sectionId === "analytics") {
+
+        analyticsViewed = true;
+
+        localStorage.setItem(
+            "analyticsViewed",
+            "true"
+        );
+
+        updateChart();
+
+        displayAnalyticsSummary();
+
+        updateJourney();
+
+    }
 
 
-    container.innerHTML = `
+    if (sectionId === "mood") {
 
-        <div class="category-summary-card">
+        displayMoneyMood();
 
-            <h2>📊 Spending Breakdown</h2>
-
-            ${categories.map(
-                category => {
-
-                    const percentage =
-                        total > 0
-
-                            ? Math.round(
-                                (
-                                    totals[
-                                        category
-                                    ] /
-                                    total
-                                ) * 100
-                            )
-
-                            : 0;
+    }
 
 
-                    return `
+    if (sectionId === "simulator") {
 
-                        <div class="summary-row">
+        updateSimulator();
 
-                            <span>
-                                ${escapeHTML(
-                                    category
-                                )}
-                            </span>
+    }
 
-                            <strong>
-                                ₹${totals[
-                                    category
-                                ].toLocaleString("en-IN")}
-                                (${percentage}%)
-                            </strong>
 
-                        </div>
+    if (sectionId === "journey") {
 
-                    `;
+        updateJourney();
 
-                }
-            ).join("")}
+    }
 
-        </div>
 
-    `;
+    if (sectionId === "budget") {
+
+        updateBudget();
+
+        updateCategoryBudgets();
+
+    }
+
 }
+
+
 // ======================================================
-// FINSIGHT - JAVASCRIPT
-// PART 3 OF 3
+// PHONE / BROWSER BACK BUTTON
 // ======================================================
 
+window.addEventListener(
+    "popstate",
+    function(event) {
 
-// MONEY MOOD
-function updateMoneyMood() {
+        let section = "home";
 
-    const container =
-        document.getElementById(
-            "moneyMood"
-        );
 
-    if (!container) return;
+        if (
+            event.state &&
+            event.state.section
+        ) {
 
+            section =
+                event.state.section;
 
-    if (expenses.length === 0) {
+        } else if (location.hash) {
 
-        container.innerHTML = `
+            section =
+                location.hash.substring(1);
 
-            <p>
-                Add some expenses and FinSight will
-                discover your money personality.
-            </p>
+        }
 
-        `;
 
-        return;
-    }
+        if (
+            !document.getElementById(section)
+        ) {
 
+            section = "home";
 
-    const totals =
-        getCategoryTotals();
+        }
 
-    const total =
-        getTotalSpent();
 
-
-    const topCategory =
-        Object.keys(totals).reduce(
-            (top, category) =>
-                totals[category] >
-                totals[top]
-                    ? category
-                    : top,
-
-            Object.keys(totals)[0]
-        );
-
-
-    const topPercentage =
-        total > 0
-            ? (
-                totals[topCategory] /
-                total
-            ) * 100
-            : 0;
-
-
-    let personality =
-        "Balanced Planner";
-
-
-    let message =
-        "You seem to keep a fairly balanced approach to spending.";
-
-
-    if (topCategory === "Food") {
-
-        personality =
-            "Foodie Financier";
-
-        message =
-            "Food takes a big part of your spending. Enjoy it, but keep an eye on your food budget! 🍔";
-
-    }
-
-    else if (topCategory === "Shopping") {
-
-        personality =
-            "Smart Shopper";
-
-        message =
-            "Shopping is your biggest spending area. A little planning can help you save more. 🛍️";
-
-    }
-
-    else if (topCategory === "Travel") {
-
-        personality =
-            "Adventure Spender";
-
-        message =
-            "You love spending on experiences and travel. Keep exploring while staying within your limits! ✈️";
-
-    }
-
-    else if (topCategory === "Education") {
-
-        personality =
-            "Future Builder";
-
-        message =
-            "You're investing in learning and your future. That's a powerful habit! 📚";
-
-    }
-
-    else if (topPercentage >= 60) {
-
-        personality =
-            "Focused Spender";
-
-        message =
-            "A large portion of your spending goes toward one category. Consider setting a category budget.";
-
-    }
-
-
-    container.innerHTML = `
-
-        <div class="money-personality">
-
-            <h3>
-                ✨ ${personality}
-            </h3>
-
-            <p>
-                ${message}
-            </p>
-
-        </div>
-
-    `;
-}
-
-
-// WHAT-IF SIMULATOR
-function updateSimulator() {
-
-    const slider =
-        document.getElementById(
-            "savingSlider"
-        );
-
-    if (!slider) return;
-
-
-    const weekly =
-        Number(slider.value);
-
-
-    const monthly =
-        Math.round(
-            weekly * 52 / 12
-        );
-
-
-    const yearly =
-        weekly * 52;
-
-
-    const savingAmount =
-        document.getElementById(
-            "savingAmount"
-        );
-
-    if (savingAmount) {
-
-        savingAmount.textContent =
-            weekly;
-
-    }
-
-
-    const monthlySaving =
-        document.getElementById(
-            "monthlySaving"
-        );
-
-    if (monthlySaving) {
-
-        monthlySaving.textContent =
-            monthly.toLocaleString("en-IN");
-
-    }
-
-
-    const yearlySaving =
-        document.getElementById(
-            "yearlySaving"
-        );
-
-    if (yearlySaving) {
-
-        yearlySaving.textContent =
-            yearly.toLocaleString("en-IN");
-
-    }
-}
-
-
-// COMPLETE SIMULATOR
-function completeSimulator() {
-
-    const slider =
-        document.getElementById(
-            "savingSlider"
-        );
-
-
-    const amount =
-        slider
-            ? Number(slider.value)
-            : 0;
-
-
-    showToast(
-        "✨",
-        `You could save ₹${(
-            amount * 52
-        ).toLocaleString("en-IN")} a year!`
-    );
-}
-
-
-// MONEY JOURNEY
-function updateJourney() {
-
-    const progress =
-        document.getElementById(
-            "journeyProgress"
-        );
-
-    const level =
-        document.getElementById(
-            "journeyLevel"
-        );
-
-    const achievements =
-        document.getElementById(
-            "achievements"
-        );
-
-
-    const count =
-        expenses.length;
-
-
-    let levelNumber = 1;
-
-    let levelName =
-        "Money Beginner";
-
-
-    if (count >= 5) {
-
-        levelNumber = 2;
-
-        levelName =
-            "Money Learner";
-    }
-
-
-    if (count >= 10) {
-
-        levelNumber = 3;
-
-        levelName =
-            "Money Tracker";
-    }
-
-
-    if (count >= 20) {
-
-        levelNumber = 4;
-
-        levelName =
-            "Money Master";
-    }
-
-
-    if (count >= 50) {
-
-        levelNumber = 5;
-
-        levelName =
-            "Money Champion";
-    }
-
-
-    const percentage =
-        Math.min(
-            count * 5,
-            100
-        );
-
-
-    if (progress) {
-
-        progress.style.width =
-            percentage + "%";
-
-    }
-
-
-    if (level) {
-
-        level.textContent =
-            `Level ${levelNumber} — ${levelName}`;
-
-    }
-
-
-    if (!achievements) return;
-
-
-    const achievementList = [];
-
-
-    if (count >= 1) {
-
-        achievementList.push(
-            "🌱 First Expense"
+        showSection(
+            section,
+            true
         );
 
     }
+);
 
 
-    if (count >= 5) {
-
-        achievementList.push(
-            "🔥 5 Expenses Tracked"
-        );
-
-    }
-
-
-    if (count >= 10) {
-
-        achievementList.push(
-            "⭐ 10 Expenses Tracked"
-        );
-
-    }
-
-
-    if (
-        budget > 0 &&
-        getTotalSpent() <= budget
-    ) {
-
-        achievementList.push(
-            "💰 Budget Guardian"
-        );
-
-    }
-
-
-    if (savingsChallenges > 0) {
-
-        achievementList.push(
-            "🏆 Savings Challenge Completed"
-        );
-
-    }
-
-
-    if (
-        achievementList.length === 0
-    ) {
-
-        achievements.innerHTML =
-            "<p>Keep tracking to unlock achievements! 🎯</p>";
-
-    }
-
-    else {
-
-        achievements.innerHTML =
-            achievementList.map(
-                item => `
-
-                    <div class="achievement">
-                        ${item}
-                    </div>
-
-                `
-            ).join("");
-
-    }
-}
-
-
-// SAVINGS CHALLENGE
-function completeSavingsChallenge() {
-
-    savingsChallenges++;
-
-    saveData();
-
-    updateJourney();
-
-
-    showToast(
-        "🏆",
-        "Savings challenge completed!"
-    );
-}
-
-
+// ======================================================
 // TOAST
+// ======================================================
+
 function showToast(
-    icon,
-    message
+    message,
+    icon
 ) {
 
     const toast =
-        document.getElementById(
-            "toast"
-        );
-
-
-    const toastIcon =
-        document.getElementById(
-            "toastIcon"
-        );
-
+        document.getElementById("toast");
 
     const toastMessage =
-        document.getElementById(
-            "toastMessage"
-        );
+        document.getElementById("toastMessage");
+
+    const toastIcon =
+        document.getElementById("toastIcon");
 
 
     if (!toast) return;
-
-
-    if (toastIcon) {
-
-        toastIcon.textContent =
-            icon;
-
-    }
 
 
     if (toastMessage) {
@@ -1667,171 +331,1367 @@ function showToast(
     }
 
 
-    toast.classList.add(
-        "show"
-    );
+    if (toastIcon) {
+
+        toastIcon.textContent =
+            icon || "✅";
+
+    }
 
 
-    setTimeout(() => {
+    toast.classList.add("show");
 
-        toast.classList.remove(
-            "show"
-        );
 
-    }, 3000);
+    setTimeout(function() {
+
+        toast.classList.remove("show");
+
+    }, 2000);
+
 }
 
 
-// ENTER KEY SUPPORT
-function setupEnterKey() {
+// ======================================================
+// ADD EXPENSE
+// ======================================================
 
-    const inputs =
-        document.querySelectorAll(
-            "#add input"
+function addExpense() {
+
+    const nameElement =
+        document.getElementById("expenseName");
+
+    const amountElement =
+        document.getElementById("expenseAmount");
+
+    const categoryElement =
+        document.getElementById("expenseCategory");
+
+    const dateElement =
+        document.getElementById("expenseDate");
+
+
+    if (
+        !nameElement ||
+        !amountElement ||
+        !categoryElement ||
+        !dateElement
+    ) {
+
+        return;
+
+    }
+
+
+    const name =
+        nameElement.value.trim();
+
+    const amount =
+        Number(amountElement.value);
+
+    const category =
+        categoryElement.value;
+
+    const date =
+        dateElement.value;
+
+
+    if (
+        name === "" ||
+        !amount ||
+        amount <= 0 ||
+        date === "" ||
+        category === "Select Category"
+    ) {
+
+        showToast(
+            "Please fill all the fields!",
+            "⚠️"
+        );
+
+        return;
+
+    }
+
+
+    expenses.push({
+
+        name: name,
+
+        amount: amount,
+
+        category: category,
+
+        date: date
+
+    });
+
+
+    saveData();
+
+    updateAll();
+
+
+    nameElement.value = "";
+
+    amountElement.value = "";
+
+    categoryElement.selectedIndex = 0;
+
+    dateElement.value =
+        getTodayDate();
+
+
+    showToast(
+        "Expense added successfully!",
+        "💸"
+    );
+
+}
+
+
+// ======================================================
+// DISPLAY EXPENSES
+// ======================================================
+
+function displayExpenses() {
+
+    const expenseList =
+        document.getElementById("expenseList");
+
+
+    total = 0;
+
+
+    expenses.forEach(function(expense) {
+
+        total +=
+            Number(expense.amount) || 0;
+
+    });
+
+
+    if (!expenseList) return;
+
+
+    expenseList.innerHTML = "";
+
+
+    expenses.forEach(
+        function(expense, index) {
+
+            const expenseDiv =
+                document.createElement("div");
+
+
+            const formattedDate =
+                expense.date
+                    ? expense.date
+                        .split("-")
+                        .reverse()
+                        .join("-")
+                    : "";
+
+
+            expenseDiv.innerHTML =
+
+                "<div>" +
+                escapeHTML(expense.name) +
+                " - ₹" +
+                Number(expense.amount) +
+                " - " +
+                escapeHTML(expense.category) +
+                "</div>" +
+
+                "<div>📅 " +
+                formattedDate +
+                "</div>" +
+
+                "<button type=\"button\" onclick=\"deleteExpense(" +
+                index +
+                ")\">Delete</button>";
+
+
+            expenseList.appendChild(
+                expenseDiv
+            );
+
+        }
+    );
+
+
+    const totalAmount =
+        document.getElementById("totalAmount");
+
+
+    if (totalAmount) {
+
+        totalAmount.textContent =
+            total;
+
+    }
+
+}
+
+
+// ======================================================
+// DELETE EXPENSE
+// ======================================================
+
+function deleteExpense(index) {
+
+    if (
+        index < 0 ||
+        index >= expenses.length
+    ) {
+
+        return;
+
+    }
+
+
+    expenses.splice(
+        index,
+        1
+    );
+
+
+    saveData();
+
+    updateAll();
+
+
+    showToast(
+        "Expense deleted!",
+        "🗑️"
+    );
+
+}
+
+
+// ======================================================
+// GET TOTAL SPENT
+// ======================================================
+
+function getTotalSpent() {
+
+    return expenses.reduce(
+        function(sum, expense) {
+
+            return (
+                sum +
+                Number(expense.amount)
+            );
+
+        },
+        0
+    );
+
+}
+
+
+// ======================================================
+// CATEGORY TOTALS
+// ======================================================
+
+function getCategoryTotals() {
+
+    const categoryTotals = {};
+
+
+    expenses.forEach(function(expense) {
+
+        const category =
+            expense.category || "Other";
+
+
+        if (
+            !categoryTotals[category]
+        ) {
+
+            categoryTotals[category] = 0;
+
+        }
+
+
+        categoryTotals[category] +=
+            Number(expense.amount) || 0;
+
+    });
+
+
+    return categoryTotals;
+
+}
+
+
+// ======================================================
+// DASHBOARD
+// ======================================================
+
+function updateDashboard() {
+
+    const expenseCount =
+        expenses.length;
+
+
+    let average = 0;
+
+
+    if (expenseCount > 0) {
+
+        average =
+            total / expenseCount;
+
+    }
+
+
+    const dashboardTotal =
+        document.getElementById(
+            "dashboardTotal"
+        );
+
+    const count =
+        document.getElementById(
+            "expenseCount"
+        );
+
+    const averageExpense =
+        document.getElementById(
+            "averageExpense"
+        );
+
+    const dashboardRemaining =
+        document.getElementById(
+            "dashboardBudgetRemaining"
         );
 
 
-    inputs.forEach(input => {
+    if (dashboardTotal) {
 
-        input.addEventListener(
-            "keydown",
-            event => {
+        dashboardTotal.textContent =
+            total;
 
-                if (
-                    event.key === "Enter"
-                ) {
+    }
 
-                    addExpense();
 
-                }
+    if (count) {
+
+        count.textContent =
+            expenseCount;
+
+    }
+
+
+    if (averageExpense) {
+
+        averageExpense.textContent =
+            average.toFixed(2);
+
+    }
+
+
+    if (dashboardRemaining) {
+
+        const remaining =
+            budget - total;
+
+        dashboardRemaining.textContent =
+            budget > 0
+                ? Math.max(
+                    remaining,
+                    0
+                )
+                : 0;
+
+    }
+
+}
+
+
+// ======================================================
+// HOME SNAPSHOT
+// ======================================================
+
+function updateHomeSnapshot() {
+
+    const homeTotal =
+        document.getElementById("homeTotal");
+
+    const homeCount =
+        document.getElementById("homeCount");
+
+    const homeTopCategory =
+        document.getElementById(
+            "homeTopCategory"
+        );
+
+
+    if (homeTotal) {
+
+        homeTotal.textContent =
+            total;
+
+    }
+
+
+    if (homeCount) {
+
+        homeCount.textContent =
+            expenses.length;
+
+    }
+
+
+    if (!homeTopCategory) return;
+
+
+    if (expenses.length === 0) {
+
+        homeTopCategory.textContent =
+            "None";
+
+        return;
+
+    }
+
+
+    const totals =
+        getCategoryTotals();
+
+
+    let topCategory = "None";
+
+    let highest = 0;
+
+
+    Object.keys(totals).forEach(
+        function(category) {
+
+            if (
+                totals[category] >
+                highest
+            ) {
+
+                highest =
+                    totals[category];
+
+                topCategory =
+                    category;
 
             }
-        );
 
+        }
+    );
+
+
+    homeTopCategory.textContent =
+        topCategory;
+
+}
+
+// ===============================
+// PART 2 — BUDGET SYSTEM
+// ===============================
+
+function setBudget() {
+    const input = document.getElementById("budgetAmount");
+
+    if (!input) return;
+
+    const amount = Number(input.value);
+
+    if (!amount || amount <= 0) {
+        showToast("⚠️", "Please enter a valid budget amount.");
+        return;
+    }
+
+    budget = amount;
+    saveData();
+
+    updateBudget();
+    updateDashboard();
+
+    input.value = "";
+
+    showToast("💰", "Main budget updated successfully!");
+}
+
+
+// -------------------------------
+// RESET MAIN BUDGET
+// -------------------------------
+
+function resetBudget() {
+    if (budget <= 0) {
+        showToast("ℹ️", "No budget is currently set.");
+        return;
+    }
+
+    const confirmReset = confirm(
+        "Are you sure you want to reset your main budget?"
+    );
+
+    if (!confirmReset) return;
+
+    budget = 0;
+    saveData();
+
+    updateBudget();
+    updateDashboard();
+
+    showToast("🔄", "Main budget has been reset.");
+}
+
+
+// -------------------------------
+// CREATE RESET BUTTON
+// -------------------------------
+
+function createResetBudgetButton() {
+    const budgetInput = document.getElementById("budgetAmount");
+
+    if (!budgetInput) return;
+
+    const setButton = budgetInput.nextElementSibling;
+
+    if (!setButton) return;
+
+    if (document.getElementById("resetBudgetBtn")) return;
+
+    const resetButton = document.createElement("button");
+
+    resetButton.id = "resetBudgetBtn";
+    resetButton.type = "button";
+    resetButton.textContent = "Reset Budget";
+    resetButton.onclick = resetBudget;
+
+    setButton.insertAdjacentElement("afterend", resetButton);
+}
+
+
+// -------------------------------
+// UPDATE MAIN BUDGET
+// -------------------------------
+
+function updateBudget() {
+    const totalElement = document.getElementById("budgetTotal");
+    const spentElement = document.getElementById("budgetSpent");
+    const remainingElement = document.getElementById("budgetRemaining");
+    const progressElement = document.getElementById("budgetProgress");
+    const messageElement = document.getElementById("budgetMessage");
+
+    if (!totalElement || !spentElement || !remainingElement) {
+        return;
+    }
+
+    const spent = getTotalSpent();
+
+    totalElement.textContent = `₹${budget.toFixed(2)}`;
+    spentElement.textContent = `₹${spent.toFixed(2)}`;
+
+    if (budget <= 0) {
+        remainingElement.textContent = "₹0.00";
+
+        if (progressElement) {
+            progressElement.style.width = "0%";
+        }
+
+        if (messageElement) {
+            messageElement.textContent = "Set a budget to start tracking.";
+        }
+
+        return;
+    }
+
+    const remaining = budget - spent;
+
+    remainingElement.textContent =
+        `₹${Math.abs(remaining).toFixed(2)}`;
+
+    const percentage = Math.min(
+        (spent / budget) * 100,
+        100
+    );
+
+    if (progressElement) {
+        progressElement.style.width = `${percentage}%`;
+        progressElement.style.display = "block";
+    }
+
+    if (messageElement) {
+        if (spent > budget) {
+            messageElement.textContent =
+                `⚠️ You are ₹${(spent - budget).toFixed(2)} over budget.`;
+        } else if (percentage >= 80) {
+            messageElement.textContent =
+                `⚠️ You have used ${percentage.toFixed(0)}% of your budget.`;
+        } else {
+            messageElement.textContent =
+                `You have ₹${remaining.toFixed(2)} remaining.`;
+        }
+    }
+}
+
+
+// -------------------------------
+// MAKE SURE PROGRESS BAR IS VISIBLE
+// -------------------------------
+
+function setupBudgetProgress() {
+    const progress = document.getElementById("budgetProgress");
+
+    if (!progress) return;
+
+    progress.style.width = "0%";
+    progress.style.display = "block";
+    progress.style.transition = "width 0.4s ease";
+}
+
+
+// ===============================
+// CATEGORY BUDGET
+// ===============================
+
+function setCategoryBudget() {
+    const nameInput =
+        document.getElementById("categoryBudgetName");
+
+    const amountInput =
+        document.getElementById("categoryBudgetAmount");
+
+    if (!nameInput || !amountInput) return;
+
+    const category = nameInput.value.trim();
+    const amount = Number(amountInput.value);
+
+    if (!category) {
+        showToast("⚠️", "Please enter a category.");
+        return;
+    }
+
+    if (!amount || amount <= 0) {
+        showToast("⚠️", "Please enter a valid amount.");
+        return;
+    }
+
+    categoryBudgets[category] = amount;
+
+    saveData();
+
+    updateCategoryBudgets();
+
+    nameInput.value = "";
+    amountInput.value = "";
+
+    showToast(
+        "🎯",
+        `${category} budget set to ₹${amount.toFixed(2)}`
+    );
+}
+
+
+// -------------------------------
+// GET CATEGORY SPENDING
+// -------------------------------
+
+function getCategorySpent(category) {
+    return expenses
+        .filter(expense =>
+            String(expense.category).toLowerCase() ===
+            String(category).toLowerCase()
+        )
+        .reduce(
+            (sum, expense) =>
+                sum + Number(expense.amount || 0),
+            0
+        );
+}
+
+
+// -------------------------------
+// UPDATE CATEGORY BUDGETS
+// -------------------------------
+
+function updateCategoryBudgets() {
+    const container =
+        document.getElementById("categoryBudgetList");
+
+    if (!container) return;
+
+    const budgetNames = Object.keys(categoryBudgets);
+
+    if (budgetNames.length === 0) {
+        container.innerHTML =
+            `<p class="empty-message">No category budgets set yet.</p>`;
+        return;
+    }
+
+    container.innerHTML = "";
+
+    budgetNames.forEach(category => {
+        const limit = Number(categoryBudgets[category]) || 0;
+        const spent = getCategorySpent(category);
+        const remaining = limit - spent;
+
+        let percentage = 0;
+
+        if (limit > 0) {
+            percentage = Math.min(
+                (spent / limit) * 100,
+                100
+            );
+        }
+
+        const item = document.createElement("div");
+
+        item.className = "category-budget-item";
+
+        item.innerHTML = `
+            <div class="category-budget-header">
+                <strong>${escapeHTML(category)}</strong>
+
+                <button
+                    type="button"
+                    onclick="deleteCategoryBudget('${escapeJSString(category)}')"
+                    class="category-budget-delete">
+                    ✕
+                </button>
+            </div>
+
+            <div class="category-budget-amounts">
+                <span>
+                    Spent: ₹${spent.toFixed(2)}
+                </span>
+
+                <span>
+                    Budget: ₹${limit.toFixed(2)}
+                </span>
+            </div>
+
+            <div class="category-budget-progress">
+                <div
+                    class="category-budget-progress-fill"
+                    style="width:${percentage}%;">
+                </div>
+            </div>
+
+            <div class="category-budget-status">
+                ${
+                    remaining >= 0
+                        ? `₹${remaining.toFixed(2)} remaining`
+                        : `₹${Math.abs(remaining).toFixed(2)} over budget`
+                }
+            </div>
+        `;
+
+        container.appendChild(item);
     });
 }
 
 
-// SECURITY HELPERS
-function escapeHTML(value) {
+// -------------------------------
+// DELETE CATEGORY BUDGET
+// -------------------------------
 
-    return String(value)
+function deleteCategoryBudget(category) {
+    if (!categoryBudgets.hasOwnProperty(category)) {
+        return;
+    }
 
-        .replaceAll(
-            "&",
-            "&amp;"
-        )
+    const confirmDelete = confirm(
+        `Delete the ${category} budget?`
+    );
 
-        .replaceAll(
-            "<",
-            "&lt;"
-        )
+    if (!confirmDelete) return;
 
-        .replaceAll(
-            ">",
-            "&gt;"
-        )
+    delete categoryBudgets[category];
 
-        .replaceAll(
-            '"',
-            "&quot;"
-        )
-
-        .replaceAll(
-            "'",
-            "&#039;"
-        );
-}
-
-
-function escapeAttribute(value) {
-
-    return String(value)
-
-        .replaceAll(
-            "\\",
-            "\\\\"
-        )
-
-        .replaceAll(
-            "'",
-            "\\'"
-        );
-}
-
-
-// UPDATE EVERYTHING
-function updateAll() {
-
-    updateHome();
-
-    updateExpenseList();
-
-    updateCategorySummary();
-
-    updateDashboard();
-
-    updateBudget();
-
+    saveData();
     updateCategoryBudgets();
 
-    updateAnalytics();
+    showToast(
+        "🗑️",
+        `${category} budget deleted.`
+    );
+}
 
-    updateMoneyMood();
+
+// -------------------------------
+// HTML SAFETY HELPERS
+// -------------------------------
+
+function escapeHTML(value) {
+    return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+
+function escapeJSString(value) {
+    return String(value)
+        .replace(/\\/g, "\\\\")
+        .replace(/'/g, "\\'")
+        .replace(/"/g, '\\"')
+        .replace(/\n/g, "\\n")
+        .replace(/\r/g, "\\r");
+}
+
+
+// ===============================
+// ANALYTICS
+// ===============================
+
+function displayAnalyticsSummary() {
+    const container =
+        document.getElementById("analyticsCategorySummary");
+
+    if (!container) return;
+
+    const totals = getCategoryTotals();
+    const categories = Object.keys(totals);
+
+    if (categories.length === 0) {
+        container.innerHTML =
+            `<p class="empty-message">No expense data available yet.</p>`;
+        return;
+    }
+
+    const sorted = categories.sort(
+        (a, b) => totals[b] - totals[a]
+    );
+
+    container.innerHTML = "";
+
+    sorted.forEach(category => {
+        const amount = totals[category];
+
+        const row = document.createElement("div");
+
+        row.className = "analytics-category-row";
+
+        row.innerHTML = `
+            <span>${escapeHTML(category)}</span>
+            <strong>₹${amount.toFixed(2)}</strong>
+        `;
+
+        container.appendChild(row);
+    });
+}
+
+
+// -------------------------------
+// CHART
+// -------------------------------
+
+function updateChart() {
+    const canvas =
+        document.getElementById("expenseChart");
+
+    if (!canvas) return;
+
+    if (typeof Chart === "undefined") {
+        return;
+    }
+
+    const totals = getCategoryTotals();
+
+    const labels = Object.keys(totals);
+    const values = Object.values(totals);
+
+    if (expenseChart) {
+        expenseChart.destroy();
+        expenseChart = null;
+    }
+
+    if (labels.length === 0) {
+        return;
+    }
+
+    const ctx = canvas.getContext("2d");
+
+    expenseChart = new Chart(ctx, {
+        type: "doughnut",
+
+        data: {
+            labels: labels,
+
+            datasets: [{
+                data: values
+            }]
+        },
+
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+
+            plugins: {
+                legend: {
+                    position: "bottom"
+                }
+            }
+        }
+    });
+}
+
+
+// -------------------------------
+// MONEY MOOD
+// -------------------------------
+
+function updateMoneyMood() {
+    const moodElement =
+        document.getElementById("moneyMood");
+
+    if (!moodElement) return;
+
+    const spent = getTotalSpent();
+
+    if (spent === 0) {
+        moodElement.textContent =
+            "😊 You're off to a great start!";
+        return;
+    }
+
+    if (budget > 0) {
+        const percentage = (spent / budget) * 100;
+
+        if (percentage >= 100) {
+            moodElement.textContent =
+                "😟 You've crossed your budget. Time to slow down.";
+        } else if (percentage >= 80) {
+            moodElement.textContent =
+                "😬 You're getting close to your budget.";
+        } else if (percentage >= 50) {
+            moodElement.textContent =
+                "🙂 You're doing okay. Keep an eye on spending.";
+        } else {
+            moodElement.textContent =
+                "😄 Great job! Your spending is under control.";
+        }
+
+        return;
+    }
+
+    moodElement.textContent =
+        "🙂 Keep tracking your expenses!";
+}
+
+
+// ===============================
+// SAVING SIMULATOR
+// ===============================
+
+function updateSimulator() {
+    const slider =
+        document.getElementById("savingSlider");
+
+    const amountElement =
+        document.getElementById("savingAmount");
+
+    const monthlyElement =
+        document.getElementById("monthlySaving");
+
+    const yearlyElement =
+        document.getElementById("yearlySaving");
+
+    if (!slider) return;
+
+    const value = Number(slider.value) || 0;
+
+    if (amountElement) {
+        amountElement.textContent =
+            `₹${value}`;
+    }
+
+    if (monthlyElement) {
+        monthlyElement.textContent =
+            `₹${value}`;
+    }
+
+    if (yearlyElement) {
+        yearlyElement.textContent =
+            `₹${value * 12}`;
+    }
+
+    simulatorUsed = true;
+    localStorage.setItem(
+        "simulatorUsed",
+        "true"
+    );
+}
+
+
+// -------------------------------
+// SIMULATOR EVENT
+// -------------------------------
+
+function setupSimulator() {
+    const slider =
+        document.getElementById("savingSlider");
+
+    if (!slider) return;
+
+    slider.addEventListener(
+        "input",
+        updateSimulator
+    );
 
     updateSimulator();
+}
 
+// ===============================
+// PART 3 — REMAINING FEATURES
+// ===============================
+
+
+// ===============================
+// UPDATE EVERYTHING
+// ===============================
+
+function updateAll() {
+    displayExpenses();
+    updateDashboard();
+    updateHomeSnapshot();
+
+    updateBudget();
+    updateCategoryBudgets();
+
+    displayAnalyticsSummary();
+    updateChart();
+
+    updateMoneyMood();
+    updateSimulator();
     updateJourney();
 }
 
 
-// INITIALIZE
+// ===============================
+// JOURNEY / PROGRESS
+// ===============================
+
+function updateJourney() {
+    const progressElement =
+        document.getElementById("journeyProgress");
+
+    const levelElement =
+        document.getElementById("journeyLevel");
+
+    const achievementsElement =
+        document.getElementById("achievements");
+
+    const count = expenses.length;
+
+    let progress = Math.min(
+        (count / 20) * 100,
+        100
+    );
+
+    if (progressElement) {
+        progressElement.style.width =
+            `${progress}%`;
+    }
+
+    if (levelElement) {
+        if (count === 0) {
+            levelElement.textContent =
+                "Beginner";
+        } else if (count < 5) {
+            levelElement.textContent =
+                "Getting Started";
+        } else if (count < 10) {
+            levelElement.textContent =
+                "Money Tracker";
+        } else if (count < 20) {
+            levelElement.textContent =
+                "Smart Spender";
+        } else {
+            levelElement.textContent =
+                "Finance Master";
+        }
+    }
+
+    if (achievementsElement) {
+        const achievements = [];
+
+        if (count >= 1) {
+            achievements.push("🏆 First Expense");
+        }
+
+        if (count >= 5) {
+            achievements.push("⭐ 5 Expenses Tracked");
+        }
+
+        if (count >= 10) {
+            achievements.push("🔥 10 Expenses Tracked");
+        }
+
+        if (budget > 0 && getTotalSpent() <= budget) {
+            achievements.push("💰 Under Budget");
+        }
+
+        achievementsElement.innerHTML =
+            achievements.length
+                ? achievements.map(item =>
+                    `<div>${item}</div>`
+                  ).join("")
+                : "<div>Start tracking to unlock achievements!</div>";
+    }
+}
+
+
+// ===============================
+// SAVINGS CHALLENGE
+// ===============================
+
+function completeChallenge() {
+    challengeCompleted = true;
+
+    localStorage.setItem(
+        "challengeCompleted",
+        "true"
+    );
+
+    updateJourney();
+
+    showToast(
+        "🏆",
+        "Savings challenge completed!"
+    );
+}
+
+
+// ===============================
+// ANALYTICS VIEW TRACKING
+// ===============================
+
+function markAnalyticsViewed() {
+    analyticsViewed = true;
+
+    localStorage.setItem(
+        "analyticsViewed",
+        "true"
+    );
+}
+
+
+// ===============================
+// NAVIGATION BUTTON HANDLING
+// ===============================
+
+function setupNavigation() {
+    const navButtons =
+        document.querySelectorAll(
+            "[onclick^='showSection']"
+        );
+
+    navButtons.forEach(button => {
+        button.addEventListener("click", () => {
+            setTimeout(() => {
+                window.scrollTo({
+                    top: 0,
+                    behavior: "smooth"
+                });
+            }, 50);
+        });
+    });
+}
+
+
+// ===============================
+// FORM ENTER KEY SUPPORT
+// ===============================
+
+function setupFormKeyboardSupport() {
+    const amountInput =
+        document.getElementById("amount");
+
+    const descriptionInput =
+        document.getElementById("description");
+
+    const categoryInput =
+        document.getElementById("category");
+
+    [amountInput, descriptionInput, categoryInput]
+        .forEach(input => {
+            if (!input) return;
+
+            input.addEventListener(
+                "keydown",
+                event => {
+                    if (event.key === "Enter") {
+                        event.preventDefault();
+                        addExpense();
+                    }
+                }
+            );
+        });
+}
+
+
+// ===============================
+// DATE SETUP
+// ===============================
+
+function setupDate() {
+    const dateInput =
+        document.getElementById("date");
+
+    if (!dateInput) return;
+
+    if (!dateInput.value) {
+        dateInput.value = getTodayDate();
+    }
+}
+
+
+// ===============================
+// BUDGET INPUT VALIDATION
+// ===============================
+
+function setupBudgetInputs() {
+    const mainBudget =
+        document.getElementById("budgetAmount");
+
+    const categoryBudget =
+        document.getElementById(
+            "categoryBudgetAmount"
+        );
+
+    [mainBudget, categoryBudget]
+        .forEach(input => {
+            if (!input) return;
+
+            input.addEventListener(
+                "input",
+                () => {
+                    if (Number(input.value) < 0) {
+                        input.value = "";
+                    }
+                }
+            );
+        });
+}
+
+
+// ===============================
+// BACK BUTTON FIX
+// ===============================
+
+function setupBackButton() {
+    let currentSection =
+        window.location.hash
+            ? window.location.hash.substring(1)
+            : "home";
+
+    if (!document.getElementById(currentSection)) {
+        currentSection = "home";
+    }
+
+    history.replaceState(
+        { section: currentSection },
+        "",
+        `#${currentSection}`
+    );
+
+    window.addEventListener(
+        "popstate",
+        event => {
+            const section =
+                event.state &&
+                event.state.section
+                    ? event.state.section
+                    : "home";
+
+            showSection(
+                section,
+                true
+            );
+        }
+    );
+
+    window.addEventListener(
+        "hashchange",
+        () => {
+            const section =
+                window.location.hash
+                    ? window.location.hash.substring(1)
+                    : "home";
+
+            if (
+                document.getElementById(section)
+            ) {
+                showSection(
+                    section,
+                    true
+                );
+            }
+        }
+    );
+}
+
+
+// ===============================
+// START APPLICATION
+// ===============================
+
 document.addEventListener(
     "DOMContentLoaded",
     () => {
 
+        setupDate();
+
         updateGreeting();
 
+        createResetBudgetButton();
 
-        const dateInput =
-            document.getElementById(
-                "expenseDate"
-            );
+        setupBudgetProgress();
 
+        setupSimulator();
 
-        if (dateInput) {
+        setupNavigation();
 
-            dateInput.value =
-                getTodayDate();
+        setupFormKeyboardSupport();
 
+        setupBudgetInputs();
+
+        setupBackButton();
+
+        let startingSection =
+            window.location.hash
+                ? window.location.hash.substring(1)
+                : "home";
+
+        if (
+            !document.getElementById(
+                startingSection
+            )
+        ) {
+            startingSection = "home";
         }
 
-
-        const slider =
-            document.getElementById(
-                "savingSlider"
-            );
-
-
-        if (slider) {
-
-            slider.addEventListener(
-                "input",
-                updateSimulator
-            );
-
-        }
-
-
-        setupEnterKey();
+        history.replaceState(
+            { section: startingSection },
+            "",
+            `#${startingSection}`
+        );
 
         updateAll();
 
+        showSection(
+            startingSection,
+            true
+        );
     }
 );
 
 
-// UPDATE GREETING EVERY MINUTE
+// ===============================
+// KEEP GREETING UPDATED
+// ===============================
+
 setInterval(
     updateGreeting,
     60000
