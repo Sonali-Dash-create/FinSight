@@ -1152,8 +1152,8 @@ function updateBudget() {
 
         budgetTotal.textContent =
             budget > 0
-                ? "₹" +
-                  budget.toFixed(2)
+                
+                ? budget.toFixed(2)
                 : "₹0.00";
     }
 
@@ -1161,7 +1161,7 @@ function updateBudget() {
     if (budgetSpent) {
 
         budgetSpent.textContent =
-            "₹" +
+        
             spent.toFixed(2);
     }
 
