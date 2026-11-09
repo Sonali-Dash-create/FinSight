@@ -1,17 +1,29 @@
 {
-  "name": "FinSight",
+  "id": "./",
+  "name": "FinSight - Smart Money Management",
   "short_name": "FinSight",
-  "description": "A smart and colorful expense tracker.",
+  "description": "Your smart personal finance companion. Track expenses, manage budgets and build better saving habits.",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#eee6ff",
-  "theme_color": "#7c3aed",
   "orientation": "portrait",
+  "background_color": "#f7f2ff",
+  "theme_color": "#7138e8",
+
   "icons": [
-  {
-    "src": "icon-512.png",
-    "sizes": "512x512",
-    "type": "image/png"
-  }
-]
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+
+  "categories": [
+    "finance",
+    "productivity",
+    "utilities"
+  ],
+
+  "prefer_related_applications": false
 }
